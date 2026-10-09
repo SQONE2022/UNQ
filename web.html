@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stockline — Inventory</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+  :root{
+    --paper:#F3F4F1;
+    --panel:#FFFFFF;
+    --ink:#1B2430;
+    --ink-soft:#5B6472;
+    --line:#E1E4E0;
+    --denim:#2F5D9A;
+    --denim-dark:#234876;
+    --green:#3F7D4F;
+    --green-bg:#E7F2E9;
+    --amber:#A8710A;
+    --amber-bg:#FBF0DC;
+    --red:#B4423A;
+    --red-bg:#FBE9E7;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Inter',sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+    min-height:100vh;
+  }
+  h1,h2,h3{font-family:'Space Grotesk',sans-serif; margin:0;}
+  code, .mono{font-family:'JetBrains Mono',monospace;}
+
+  /* ---------- Login screen ---------- */
+  #loginScreen{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+  }
+  .login-card{
+    width:100%;
+    max-width:380px;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:36px 32px 30px;
+    box-shadow:0 1px 2px rgba(27,36,48,.04);
+  }
+  .login-mark{
+    width:40px;height:40px;
+    border-radius:8px;
+    background:var(--denim);
+    color:#fff;
+    display:flex;align-items:center;justify-content:center;
+    font-size:1.05rem;
+    margin-bottom:18px;
+  }
+  .login-card h1{font-size:1.35rem; letter-spacing:-0.01em;}
+  .login-sub{color:var(--ink-soft); font-size:0.88rem; margin:6px 0 26px;}
+  .field{margin-bottom:16px;}
+  .field label{display:block; font-size:0.8rem; font-weight:600; margin-bottom:6px; color:var(--ink);}
+  .field input{
+    width:100%;
+    padding:10px 12px;
+    border:1px solid var(--line);
+    border-radius:7px;
+    font-size:0.92rem;
+    font-family:inherit;
+    background:#FAFAF8;
+  }
+  .field input:focus{outline:2px solid var(--denim); outline-offset:1px; border-color:var(--denim);}
+  .login-hint{
+    font-size:0.76rem;
+    color:var(--ink-soft);
+    background:var(--paper);
+    border:1px dashed var(--line);
+    border-radius:7px;
+    padding:9px 11px;
+    margin-bottom:18px;
+  }
+  .login-error{
+    display:none;
+    font-size:0.82rem;
+    color:var(--red);
+    background:var(--red-bg);
+    border-radius:7px;
+    padding:9px 11px;
+    margin-bottom:16px;
+  }
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    border:1px solid transparent;
+    border-radius:7px;
+    font-family:inherit;
+    font-weight:600;
+    font-size:0.88rem;
+    padding:10px 16px;
+    cursor:pointer;
+    transition:background .12s ease, border-color .12s ease;
+  }
+  .btn:disabled{opacity:.6; cursor:not-allowed;}
+  .btn-block{width:100%;}
+  .btn-primary{background:var(--denim); color:#fff;}
+  .btn-primary:hover{background:var(--denim-dark);}
+  .btn-outline{background:#fff; border-color:var(--line); color:var(--ink);}
+  .btn-outline:hover{border-color:var(--denim); color:var(--denim);}
+  .btn-danger{background:var(--red-bg); color:var(--red);}
+  .btn-danger:hover{background:#F6D9D6;}
+  .btn-sm{padding:6px 10px; font-size:0.8rem;}
+
+  /* ---------- Dashboard shell ---------- */
+  #dashboard{display:none;}
+  .app-shell{display:flex; min-height:100vh;}
+
+  .hamburger{
+    background:none; border:none; cursor:pointer;
+    width:34px; height:34px; border-radius:7px;
+    display:flex; align-items:center; justify-content:center;
+    color:var(--ink); font-size:1rem;
+  }
+  .hamburger:hover{background:var(--paper);}
+
+  .sidebar{
+    width:216px; flex-shrink:0;
+    background:var(--panel); border-right:1px solid var(--line);
+    padding:18px 12px; overflow:hidden;
+    transition:width .18s ease, padding .18s ease, opacity .12s ease;
+  }
+  .sidebar.collapsed{width:0; padding-left:0; padding-right:0; opacity:0; border-right:0;}
+  .sidebar-brand{display:flex; align-items:center; gap:10px; padding:2px 8px 20px;}
+  .sidebar-brand span{font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:1.02rem; white-space:nowrap;}
+  .nav-label{font-size:0.68rem; font-weight:700; color:var(--ink-soft); letter-spacing:.04em; padding:0 10px; margin:14px 0 6px;}
+  .nav-label:first-of-type{margin-top:0;}
+  .nav-item{
+    display:flex; align-items:center; gap:10px;
+    padding:9px 10px; border-radius:7px;
+    font-size:0.86rem; font-weight:600; color:var(--ink-soft);
+    cursor:pointer; margin-bottom:2px; white-space:nowrap;
+    border:none; background:none; width:100%; text-align:left; font-family:inherit;
+  }
+  .nav-item i{width:16px; text-align:center; font-size:0.85rem;}
+  .nav-item:hover{background:var(--paper); color:var(--ink);}
+  .nav-item.active{background:var(--denim); color:#fff;}
+
+  .main-area{flex:1; min-width:0;}
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 24px;
+    background:var(--panel);
+    border-bottom:1px solid var(--line);
+  }
+  .topbar-left{display:flex; align-items:center; gap:14px;}
+  .topbar-brand{display:flex; align-items:center; gap:10px;}
+  .topbar-brand .login-mark{margin:0; width:32px; height:32px; font-size:0.85rem;}
+  .topbar-brand span{font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:1.02rem;}
+  .topbar-user{display:flex; align-items:center; gap:12px; font-size:0.85rem; color:var(--ink-soft);}
+  .topbar-user b{color:var(--ink);}
+  .save-indicator{font-size:0.76rem; color:var(--ink-soft); display:flex; align-items:center; gap:6px; min-width:86px;}
+  .save-indicator i{font-size:0.8rem;}
+  .save-indicator.saving{color:var(--denim);}
+  .save-indicator.saved{color:var(--green);}
+  .save-indicator.error{color:var(--red);}
+
+  .view{display:none;}
+  .view.active{display:block;}
+
+  .wrap{max-width:1180px; margin:0 auto; padding:28px;}
+
+  /* ---------- Dashboard stats ---------- */
+  .stat-grid{display:grid; grid-template-columns:repeat(2, 1fr); gap:16px; margin-bottom:24px;}
+  .stat-card{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:18px 20px;}
+  .stat-card .stat-label{font-size:0.78rem; color:var(--ink-soft); font-weight:600; display:flex; align-items:center; gap:7px;}
+  .stat-card .stat-value{font-family:'Space Grotesk',sans-serif; font-size:1.7rem; font-weight:700; margin-top:8px;}
+  .stat-card.warn .stat-value{color:var(--amber);}
+  .stat-card.danger .stat-value{color:var(--red);}
+
+  /* ---------- Job orders ---------- */
+  .jo-status{
+    display:inline-block; padding:3px 10px; border-radius:999px;
+    font-size:0.76rem; font-weight:700;
+  }
+  .status-select{font-family:inherit; border:0; cursor:pointer; appearance:auto;}
+  .status-select:focus{outline:2px solid var(--denim); outline-offset:1px;}
+  .jo-status.printing{background:var(--amber-bg); color:var(--amber);}
+  .jo-status.heatpress{background:#E4ECF7; color:var(--denim);}
+  .jo-status.cut{background:#F2E8F5; color:#7A4A8B;}
+  .jo-status.sewing{background:#E8EEF7; color:var(--denim-dark);}
+  .jo-status.done{background:var(--green-bg); color:var(--green);}
+
+  @media (max-width: 720px){
+    .stat-grid{grid-template-columns:repeat(2, 1fr);}
+    .sidebar{position:fixed; top:0; bottom:0; left:0; z-index:40; box-shadow:0 0 0 rgba(0,0,0,0);}
+    .sidebar.collapsed{box-shadow:none;}
+    .sidebar:not(.collapsed){box-shadow:2px 0 16px rgba(27,36,48,.18);}
+  }
+  .page-header{display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:20px; gap:16px; flex-wrap:wrap;}
+  .page-header h2{font-size:1.5rem; letter-spacing:-0.01em;}
+  .page-header p{color:var(--ink-soft); font-size:0.88rem; margin:6px 0 0;}
+
+  .alert{
+    display:flex; align-items:center; gap:10px;
+    padding:11px 14px; border-radius:8px;
+    font-size:0.86rem; margin-bottom:18px;
+  }
+  .alert-success{background:var(--green-bg); color:var(--green);}
+  .alert-error{background:var(--red-bg); color:var(--red);}
+
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:10px; overflow:hidden;}
+  .card-header{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 20px; border-bottom:1px solid var(--line); flex-wrap:wrap; gap:10px;
+  }
+  .card-header h3{font-size:1.02rem; display:flex; align-items:center; gap:8px;}
+  #view-operations table input,#view-operations table select{width:100%; min-width:105px; padding:7px 8px; border:1px solid var(--line); border-radius:5px; font:inherit; font-size:.78rem;}
+  #view-operations table input:focus,#view-operations table select:focus{outline:2px solid var(--denim); outline-offset:1px;}
+  .operation-sheet-meta{display:flex;align-items:center;border:1px solid #222;background:#dbe5f1;margin-bottom:0;max-width:420px;font-weight:700;font-size:.8rem;text-transform:uppercase;}
+  .operation-sheet-meta label{padding:9px 12px;border-right:1px solid #222;}
+  .operation-sheet-meta input{border:0;background:#fff;padding:9px 12px;font:inherit;flex:1;}
+  #view-operations .sheet-table{border:1px solid #222;border-collapse:collapse;background:#fff;}
+  #view-operations .sheet-table th{background:#dbe5f1;color:#111;border:1px solid #222;text-transform:uppercase;font-size:.7rem;letter-spacing:.02em;}
+  #view-operations .sheet-table td{border:1px solid #222;color:#111;}
+  #view-operations .sheet-table tfoot td{background:#dbe5f1;font-weight:800;border:1px solid #222;}
+  .input-wrap{position:relative; width:220px;}
+  .input-wrap i{position:absolute; left:11px; top:50%; transform:translateY(-50%); color:var(--ink-soft); font-size:0.8rem;}
+  .input-wrap input{
+    width:100%; padding:8px 10px 8px 30px;
+    border:1px solid var(--line); border-radius:7px; font-size:0.85rem; font-family:inherit;
+  }
+
+  .table-wrap{overflow-x:auto;}
+  table{width:100%; border-collapse:collapse; font-size:0.86rem;}
+  thead th{
+    text-align:left; padding:10px 14px; font-size:0.72rem;
+    color:var(--ink-soft); font-weight:600; letter-spacing:.02em;
+    border-bottom:1px solid var(--line); white-space:nowrap;
+  }
+  tbody td{padding:12px 14px; border-bottom:1px solid var(--line); vertical-align:middle;}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr:hover{background:#FAFAF9;}
+  .sku{font-family:'JetBrains Mono',monospace; font-size:0.8rem; color:var(--ink-soft);}
+  .price-note{font-size:0.76rem; color:var(--ink-soft);}
+
+  .badge{
+    display:inline-block; min-width:26px; padding:3px 8px; border-radius:6px;
+    font-size:0.78rem; font-weight:700; font-family:'JetBrains Mono',monospace;
+  }
+  .badge-green{background:var(--green-bg); color:var(--green);}
+  .badge-yellow{background:var(--amber-bg); color:var(--amber);}
+  .badge-red{background:var(--red-bg); color:var(--red);}
+
+  .row-actions{display:flex; gap:6px; justify-content:flex-end;}
+  .text-muted{color:var(--ink-soft);}
+  .legend{font-size:0.78rem; color:var(--ink-soft); padding:14px 20px 18px;}
+
+  /* ---------- Modal ---------- */
+  .modal-overlay{
+    display:none; position:fixed; inset:0; background:rgba(27,36,48,.42);
+    align-items:center; justify-content:center; padding:20px; z-index:50;
+  }
+  .modal-overlay.open{display:flex;}
+  .modal-box{
+    background:var(--panel); border-radius:12px; padding:26px 26px 22px;
+    width:100%; max-width:520px; position:relative;
+    box-shadow:0 12px 32px rgba(27,36,48,.18);
+  }
+  .modal-box h3{font-size:1.08rem; display:flex; align-items:center; gap:8px; margin-bottom:18px;}
+  .attachment-viewer .modal-box{max-width:1000px; max-height:90vh;}
+  .attachment-viewer-content{display:flex; align-items:center; justify-content:center; min-height:240px; max-height:72vh; overflow:auto; background:var(--paper); border-radius:7px;}
+  .attachment-viewer-content img{display:block; max-width:100%; max-height:70vh; object-fit:contain;}
+  .attachment-viewer-content iframe{display:block; width:100%; height:70vh; border:0;}
+  .modal-close{
+    position:absolute; top:18px; right:20px; cursor:pointer; color:var(--ink-soft);
+  }
+  .modal-close:hover{color:var(--ink);}
+  .form-row{display:flex; gap:14px; margin-bottom:14px;}
+  .form-group{flex:1;}
+  .form-group label{display:block; font-size:0.78rem; font-weight:600; margin-bottom:5px;}
+  .form-group input{
+    width:100%; padding:9px 10px; border:1px solid var(--line); border-radius:7px;
+    font-family:inherit; font-size:0.88rem;
+  }
+  .form-group input:focus{outline:2px solid var(--denim); outline-offset:1px; border-color:var(--denim);}
+  .size-grid{display:grid; grid-template-columns:repeat(4, 1fr); gap:10px; margin-bottom:6px;}
+  .size-grid label{text-transform:none; font-size:0.72rem; margin-bottom:4px; display:block; color:var(--ink-soft);}
+  .modal-actions{margin-top:18px;}
+
+  /* ---------- Loading overlay ---------- */
+  .load-overlay{
+    position:fixed; inset:0; background:var(--paper);
+    display:flex; align-items:center; justify-content:center; flex-direction:column; gap:12px;
+    z-index:100;
+  }
+  .load-overlay .spinner{
+    width:30px; height:30px; border-radius:50%;
+    border:3px solid var(--line); border-top-color:var(--denim);
+    animation:spin .7s linear infinite;
+  }
+  .load-overlay span{font-size:0.86rem; color:var(--ink-soft); font-weight:600;}
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<!-- ============ LOGIN SCREEN ============ -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-mark"><i class="fa-solid fa-box"></i></div>
+    <h1>Sign in to Stockline</h1>
+    <p class="login-sub">Manage products and size-level stock.</p>
+
+    <div class="login-error" id="loginError">
+      <i class="fa-solid fa-circle-exclamation"></i> Incorrect username or password.
+    </div>
+
+    <form id="loginForm" onsubmit="return handleLogin(event)">
+      <div class="field">
+        <label for="username">Username</label>
+        <input type="text" id="username" autocomplete="username" required>
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input type="password" id="password" autocomplete="current-password" required>
+      </div>
+      <div class="login-hint">
+        <i class="fa-solid fa-circle-info"></i> Demo credentials — username <b>admin</b>, password <b>admin123</b>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block" id="loginBtn">Sign in</button>
+    </form>
+  </div>
+</div>
+
+<!-- ============ DASHBOARD ============ -->
+<div id="dashboard">
+  <div class="app-shell">
+
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <div class="login-mark"><i class="fa-solid fa-box"></i></div>
+        <span>Admin Dashboard</span>
+      </div>
+      <p class="nav-label">Menu</p>
+      <button class="nav-item active" data-view="dashboard" onclick="window.location.href='dashboard.html'"><i class="fa-solid fa-gauge-high"></i> Dashboard</button>
+      <button class="nav-item" data-view="stocks" onclick="window.location.href='stocks.html'"><i class="fa-solid fa-ruler"></i> Stocks</button>
+      <button class="nav-item" data-view="joborders" onclick="window.location.href='joborder.html'"><i class="fa-solid fa-clipboard-list"></i> Job Order Tracker</button>
+      <button class="nav-item" onclick="window.location.href='news.html'"><i class="fa-solid fa-newspaper"></i> News</button>
+      <button class="nav-item" data-view="operations" onclick="window.location.href='operation-records.html'"><i class="fa-solid fa-clipboard-check"></i> Operation Records</button>
+      <button class="nav-item" onclick="window.location.href='live-seller-tracker.html'"><i class="fa-solid fa-chart-line"></i> Live Seller Tracker</button>
+      <button class="nav-item" onclick="window.location.href='sewer-record.html'"><i class="fa-solid fa-user-gear"></i> Sewer Record</button>
+    </div>
+
+    <div class="main-area">
+      <div class="topbar">
+        <div class="topbar-left">
+          <button class="hamburger" onclick="toggleSidebar()" aria-label="Toggle menu"><i class="fa-solid fa-bars"></i></button>
+        </div>
+        <div class="topbar-user">
+          <span class="save-indicator" id="saveIndicator"></span>
+          Signed in as <b id="whoami">admin</b>
+          <button class="btn btn-outline btn-sm" onclick="handleLogout()"><i class="fa-solid fa-arrow-right-from-bracket"></i> Log out</button>
+        </div>
+      </div>
+
+      <div class="wrap">
+
+        <div class="alert alert-success" id="flash" style="display:none;">
+          <i class="fa-solid fa-circle-check"></i>
+          <span id="flashMsg"></span>
+        </div>
+
+        <!-- ===== Dashboard view ===== -->
+        <div class="view active" id="view-dashboard">
+          <div class="page-header">
+            <div>
+              <h2>Dashboard</h2>
+              <p>A quick look at stock health and open job orders.</p>
+            </div>
+          </div>
+          <div class="stat-grid">
+            <div class="stat-card">
+              <div class="stat-label"><i class="fa-solid fa-boxes-stacked"></i> Products</div>
+              <div class="stat-value" id="stat-products">0</div>
+            </div>
+            <div class="stat-card warn">
+              <div class="stat-label"><i class="fa-solid fa-triangle-exclamation"></i> Low stock</div>
+              <div class="stat-value" id="stat-low">0</div>
+            </div>
+            <div class="stat-card danger">
+              <div class="stat-label"><i class="fa-solid fa-circle-xmark"></i> Out of stock</div>
+              <div class="stat-value" id="stat-out">0</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <h3><i class="fa-solid fa-clipboard-list" style="color:var(--denim);"></i> Open job orders</h3>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr><th>Job #</th><th>Product</th><th>Status</th><th>Due</th></tr>
+                </thead>
+                <tbody id="dashJobBody"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="card" style="margin-top:24px;">
+            <div class="card-header"><h3><i class="fa-solid fa-newspaper" style="color:var(--denim);"></i> Latest News</h3></div>
+            <div id="dashboardNews"></div>
+          </div>
+        </div>
+
+        <!-- ===== Stocks view ===== -->
+        <div class="view" id="view-stocks">
+          <div class="page-header">
+            <div>
+              <h2>Stocks Overview</h2>
+                <p>Manage products and size-level stock.</p>
+            </div>
+            <button class="btn btn-primary" onclick="openModal('addModal')"><i class="fa-solid fa-plus"></i> Add Product</button>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3><i class="fa-solid fa-ruler" style="color:var(--denim);"></i> Stocks per Product (<span id="productCount">0</span> products)</h3>
+              <div class="input-wrap">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="search" id="searchInput" placeholder="Search SKU or name" oninput="renderTable()">
+              </div>
+            </div>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>SKU</th>
+                    <th>Product</th>
+                    <th style="text-align:center;">XS<br></th>
+                    <th style="text-align:center;">S<br></th>
+                    <th style="text-align:center;">M<br></th>
+                    <th style="text-align:center;">L<br></th>
+                    <th style="text-align:center;">XL<br></th>
+                    <th style="text-align:center;">Total</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+              </table>
+            </div>
+            <p class="legend">
+              <span class="badge badge-green">green</span> = healthy stock &nbsp;
+              <span class="badge badge-red">red</span> = out of stock
+            </p>
+          </div>
+        </div>
+
+        <!-- ===== Job Order Tracker view ===== -->
+        <div class="view" id="view-joborders">
+          <div class="page-header">
+            <div><h2>Job Order Tracker</h2><p>Track production or fulfillment jobs against your products.</p></div>
+            <button class="btn btn-primary" onclick="openModal('joModal')"><i class="fa-solid fa-plus"></i> New Job Order</button>
+          </div>
+          <div class="card">
+            <div class="card-header"><h3><i class="fa-solid fa-clipboard-list" style="color:var(--denim);"></i> Job Orders (<span id="jobCount">0</span>)</h3></div>
+            <div class="table-wrap"><table><thead><tr><th>Job #</th><th>Product</th><th style="text-align:center;">Qty</th><th>Status</th><th>Due date</th><th>PDF</th><th></th></tr></thead><tbody id="joBody"></tbody></table></div>
+          </div>
+        </div>
+
+        <!-- ===== Operations Records view ===== -->
+        <div class="view" id="view-operations">
+          <div class="page-header">
+            <div><h2>Operation Records</h2><p>Record production work and track total quantities.</p></div>
+            <button class="btn btn-primary" onclick="focusOperationEntry()"><i class="fa-solid fa-plus"></i> Add Row</button>
+          </div>
+          <div class="operation-sheet-meta"><label for="operation_sheet_date">Date:</label><input type="date" id="operation_sheet_date"></div>
+          <div class="card"><div class="table-wrap"><table class="sheet-table"><thead><tr><th>Job Order / Type</th><th>Product Name</th><th>Size</th><th>Qty</th><th>Name</th><th>Operations</th><th>Start</th><th>End</th><th></th></tr></thead><tbody id="operationEntryBody"><tr><td><input type="text" id="entry_job" placeholder="FOR PHASE OUT"></td><td><input type="text" id="entry_product"></td><td><input type="text" id="entry_size" placeholder="2XL-110 2XL-115"></td><td><input type="number" id="entry_quantity" min="1"></td><td><input type="text" id="entry_name"></td><td><input type="text" id="entry_operation" placeholder="Sewing"></td><td><input type="datetime-local" id="entry_start"></td><td><input type="datetime-local" id="entry_end"></td><td><button class="btn btn-primary btn-sm" onclick="handleInlineOperation()" title="Save row"><i class="fa-solid fa-check"></i></button></td></tr></tbody><tbody id="operationsBody"></tbody><tfoot><tr><td colspan="3" style="text-align:right;">TOTAL:</td><td id="operationTotalQuantity">0</td><td colspan="5"></td></tr></tfoot></table></div></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Operation Record Modal -->
+<div class="modal-overlay" id="operationModal">
+  <div class="modal-box">
+    <span class="modal-close" onclick="closeModal('operationModal')"><i class="fa-solid fa-xmark"></i></span>
+    <h3><i class="fa-solid fa-clipboard-check" style="color:var(--denim);"></i> Add Operation Record</h3>
+    <form onsubmit="return handleAddOperation(event)">
+      <div class="form-row"><div class="form-group"><label for="operation_date">Date</label><input type="date" id="operation_date" required></div><div class="form-group"><label for="operation_job">Job Order Number</label><input type="text" id="operation_job" placeholder="JO-1044" required></div></div>
+      <div class="form-row"><div class="form-group"><label for="operation_product">Product Name</label><input type="text" id="operation_product" required></div><div class="form-group"><label for="operation_size">Size</label><select id="operation_size" required><option value="XS">XS</option><option value="S">S</option><option value="M">M</option><option value="L">L</option><option value="XL">XL</option></select></div></div>
+      <div class="form-row"><div class="form-group"><label for="operation_quantity">Quantity</label><input type="number" id="operation_quantity" min="1" required></div><div class="form-group"><label for="operation_name">Name</label><input type="text" id="operation_name" required></div></div>
+      <div class="form-group"><label for="operation_type">Operation</label><input type="text" id="operation_type" placeholder="Printing, sewing, heatpress..." required></div>
+      <div class="form-row"><div class="form-group"><label for="operation_start">Start</label><input type="datetime-local" id="operation_start" required></div><div class="form-group"><label for="operation_end">End</label><input type="datetime-local" id="operation_end"></div></div>
+      <div class="modal-actions"><button type="submit" class="btn btn-primary btn-block"><i class="fa-solid fa-check"></i> Save Record</button></div>
+    </form>
+  </div>
+</div>
+
+<!-- Dashboard Attachment Viewer -->
+<div class="modal-overlay attachment-viewer" id="attachmentViewer">
+  <div class="modal-box">
+    <span class="modal-close" onclick="closeModal('attachmentViewer')"><i class="fa-solid fa-xmark"></i></span>
+    <h3 id="attachmentViewerTitle"><i class="fa-solid fa-paperclip" style="color:var(--denim);"></i> Attachment</h3>
+    <div class="attachment-viewer-content" id="attachmentViewerContent"></div>
+  </div>
+</div>
+
+<!-- New Job Order Modal -->
+<div class="modal-overlay" id="joModal">
+  <div class="modal-box">
+    <span class="modal-close" onclick="closeModal('joModal')"><i class="fa-solid fa-xmark"></i></span>
+    <h3><i class="fa-solid fa-clipboard-list" style="color:var(--denim);"></i> New Job Order</h3>
+    <form onsubmit="return handleAddJobOrder(event)">
+      <div class="form-group" style="margin-bottom:14px;"><label>Product</label><select id="jo_product" required style="width:100%; padding:9px 10px; border:1px solid var(--line); border-radius:7px; font-family:inherit; font-size:0.88rem;"></select></div>
+      <div class="form-row"><div class="form-group"><label>Quantity</label><input type="number" min="1" id="jo_qty" value="1" required></div><div class="form-group"><label>Due date</label><input type="date" id="jo_due" required></div></div>
+      <div class="form-group"><label>Status</label><select id="jo_status" style="width:100%; padding:9px 10px; border:1px solid var(--line); border-radius:7px; font-family:inherit; font-size:0.88rem;"><option value="printing">Printing</option><option value="heatpress">Heatpress</option><option value="cut">Cut</option><option value="sewing">Sewing</option><option value="done">Done</option></select></div>
+      <div class="form-group" style="margin-top:14px;"><label for="jo_pdf">Product PDF attachment</label><input type="file" id="jo_pdf" accept="application/pdf,.pdf" style="width:100%; padding:8px 0; font-family:inherit; font-size:0.84rem;"><span class="price-note">Optional PDF, maximum 10 MB.</span></div>
+      <div class="modal-actions"><button type="submit" class="btn btn-primary btn-block"><i class="fa-solid fa-check"></i> Create Job Order</button></div>
+    </form>
+  </div>
+</div>
+
+<!-- Add Product Modal -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal-box">
+    <span class="modal-close" onclick="closeModal('addModal')"><i class="fa-solid fa-xmark"></i></span>
+    <h3><i class="fa-solid fa-plus" style="color:var(--denim);"></i> Add Product</h3>
+    <form onsubmit="return handleAdd(event)">
+      <div class="form-row">
+        <div class="form-group"><label>SKU</label><input type="text" id="add_sku" required></div>
+        <div class="form-group"><label>Name</label><input type="text" id="add_name" required></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Prices per size (₱)</label><div class="size-grid" id="add_price_grid"></div></div>
+      </div>
+      <div class="form-group">
+        <label>Stock per size</label>
+        <div class="size-grid" id="add_size_grid"></div>
+      </div>
+      <div class="modal-actions">
+        <button type="submit" class="btn btn-primary btn-block"><i class="fa-solid fa-check"></i> Save Product</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Edit Product Modal -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal-box">
+    <span class="modal-close" onclick="closeModal('editModal')"><i class="fa-solid fa-xmark"></i></span>
+    <h3><i class="fa-solid fa-pen" style="color:var(--denim);"></i> Edit Product</h3>
+    <form onsubmit="return handleEdit(event)">
+      <input type="hidden" id="edit_id">
+      <div class="form-row">
+        <div class="form-group"><label>SKU</label><input type="text" id="edit_sku" required></div>
+        <div class="form-group"><label>Name</label><input type="text" id="edit_name" required></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Prices per size (₱)</label><div class="size-grid" id="edit_price_grid"></div></div>
+      </div>
+      <div class="form-group">
+        <label>Stock per size</label>
+        <div class="size-grid" id="edit_size_grid"></div>
+      </div>
+      <div class="modal-actions">
+        <button type="submit" class="btn btn-primary btn-block"><i class="fa-solid fa-check"></i> Update Product</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="database.js"></script>
+<script>
+const SIZES = ['XS','S','M','L','XL'];
+const CREDENTIALS = { username: 'admin', password: 'admin123' };
+let products = [];
+let jobOrders = [];
+let news = [];
+let operations = [];
+let nextId = 1;
+let nextJoId = 1;
+let nextJoNum = 1044;
+let nextOperationId = 1;
+
+const STATUS_LABEL = { printing: 'Printing', heatpress: 'Heatpress', cut: 'Cut', sewing: 'Sewing', done: 'Done' };
+const LEGACY_STATUS = { pending: 'printing', progress: 'sewing' };
+
+function setSaveIndicator(state){
+  const el = document.getElementById('saveIndicator');
+  if(!el) return;
+  el.className = 'save-indicator ' + state;
+  if(state === 'saving') el.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Saving…';
+  else if(state === 'saved') el.innerHTML = '<i class="fa-solid fa-circle-check"></i> Saved';
+  else if(state === 'error') el.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Save failed';
+  else el.innerHTML = '';
+  if(state === 'saved'){
+    setTimeout(() => { if(el.className === 'save-indicator saved') el.innerHTML = ''; }, 1800);
+  }
+}
+
+/* ---------------- auth / navigation ---------------- */
+
+async function handleLogin(e){
+  e.preventDefault();
+  const u = document.getElementById('username').value.trim();
+  const p = document.getElementById('password').value;
+  const err = document.getElementById('loginError');
+  if(u === CREDENTIALS.username && p === CREDENTIALS.password){
+    err.style.display = 'none';
+    sessionStorage.setItem('stockline-authenticated', 'true');
+    document.getElementById('whoami').textContent = u;
+
+    const loginBtn = document.getElementById('loginBtn');
+    loginBtn.disabled = true;
+    loginBtn.textContent = 'Loading your data…';
+
+    await loadAppData();
+    await migrateProductPrices();
+    await loadNewsData();
+    await loadOperationsData();
+    jobOrders.forEach(job => {
+      if(LEGACY_STATUS[job.status]) job.status = LEGACY_STATUS[job.status];
+    });
+
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+    buildSizeGrid('add_size_grid');
+    buildPriceGrid('add_price_grid');
+    renderTable();
+    renderJobOrders();
+    renderDashboard();
+    const requestedView = new URLSearchParams(window.location.search).get('view');
+    showView(requestedView === 'stocks' ? 'stocks' : requestedView === 'joborders' ? 'joborders' : requestedView === 'operations' ? 'operations' : 'dashboard');
+
+    loginBtn.disabled = false;
+    loginBtn.textContent = 'Sign in';
+  } else {
+    err.style.display = 'flex';
+  }
+  return false;
+}
+
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('collapsed');
+}
+
+function showView(view){
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-' + view).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.view === view);
+  });
+  if(view === 'dashboard') renderDashboard();
+  if(view === 'operations') renderOperations();
+}
+
+function handleLogout(){
+  sessionStorage.removeItem('stockline-authenticated');
+  document.getElementById('dashboard').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('loginForm').reset();
+  document.getElementById('loginError').style.display = 'none';
+}
+
+function buildSizeGrid(containerId, values){
+  const grid = document.getElementById(containerId);
+  grid.innerHTML = '';
+  SIZES.forEach(size => {
+    const val = values ? (values[size] ?? 0) : 0;
+    grid.insertAdjacentHTML('beforeend', `
+      <div>
+        <label>${size}</label>
+        <input type="number" min="0" data-size="${size}" value="${val}">
+      </div>
+    `);
+  });
+}
+
+function buildPriceGrid(containerId, values){
+  const grid = document.getElementById(containerId);
+  grid.innerHTML = '';
+  SIZES.forEach(size => {
+    const val = values ? (values[size] ?? 0) : 0;
+    grid.insertAdjacentHTML('beforeend', `<div><label>${size}</label><input type="number" step="0.01" min="0" data-price-size="${size}" value="${val}"></div>`);
+  });
+}
+
+function readPriceGrid(containerId){
+  const grid = document.getElementById(containerId);
+  const out = {};
+  grid.querySelectorAll('input[data-price-size]').forEach(input => {
+    out[input.dataset.priceSize] = parseFloat(input.value) || 0;
+  });
+  return out;
+}
+
+async function migrateProductPrices(){
+  const updates = products.filter(product => !product.prices).map(product => {
+    const legacyPrice = Number(product.price) || 0;
+    product.prices = Object.fromEntries(SIZES.map(size => [size, legacyPrice]));
+    delete product.price;
+    delete product.reorder_level;
+    return saveRow(TABLE_PRODUCTS, product);
+  });
+  await Promise.all(updates);
+}
+
+function readSizeGrid(containerId){
+  const grid = document.getElementById(containerId);
+  const out = {};
+  grid.querySelectorAll('input[data-size]').forEach(inp => {
+    out[inp.dataset.size] = parseInt(inp.value, 10) || 0;
+  });
+  return out;
+}
+
+function showFlash(msg, isError){
+  const flash = document.getElementById('flash');
+  flash.className = isError ? 'alert alert-error' : 'alert alert-success';
+  flash.querySelector('i').className = isError ? 'fa-solid fa-triangle-exclamation' : 'fa-solid fa-circle-check';
+  document.getElementById('flashMsg').textContent = msg;
+  flash.style.display = 'flex';
+  setTimeout(() => { flash.style.display = 'none'; }, 2600);
+}
+
+function renderTable(){
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  const filtered = products
+    .filter(p => !q || p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q))
+    .sort((a,b) => a.name.localeCompare(b.name));
+
+  document.getElementById('productCount').textContent = filtered.length;
+  const body = document.getElementById('tableBody');
+
+  if(!filtered.length){
+    body.innerHTML = `<tr><td colspan="9" class="text-muted">No products found.</td></tr>`;
+    return;
+  }
+
+  body.innerHTML = filtered.map(p => {
+    const total = SIZES.reduce((sum, s) => sum + (p.sizes[s] || 0), 0);
+    const cells = SIZES.map(s => {
+      const qty = p.sizes[s] || 0;
+      const cls = qty === 0 ? 'badge-red' : 'badge-green';
+      const price = p.prices?.[s] ?? p.price ?? 0;
+      return `<td style="text-align:center;"><span class="badge ${cls}">${qty}</span><br><span class="price-note">₱${price.toFixed(2)}</span></td>`;
+    }).join('');
+
+    return `
+      <tr>
+        <td class="sku">${p.sku}</td>
+        <td>
+          ${p.name}
+        </td>
+        ${cells}
+        <td style="text-align:center; font-weight:800;">${total}</td>
+        <td>
+          <div class="row-actions">
+            <button class="btn btn-outline btn-sm" onclick="openEditModal(${p.id})"><i class="fa-solid fa-pen"></i></button>
+            <button class="btn btn-danger btn-sm" onclick="handleDelete(${p.id})"><i class="fa-solid fa-trash"></i></button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function openModal(id){ document.getElementById(id).classList.add('open'); }
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+
+async function handleAdd(e){
+  e.preventDefault();
+  const sku = document.getElementById('add_sku').value.trim();
+  const name = document.getElementById('add_name').value.trim();
+  const sizes = readSizeGrid('add_size_grid');
+  const prices = readPriceGrid('add_price_grid');
+
+  const newProduct = { id: nextId++, sku, name, prices, sizes };
+  products.push(newProduct);
+  e.target.reset();
+  buildSizeGrid('add_size_grid');
+  buildPriceGrid('add_price_grid');
+  closeModal('addModal');
+  renderTable();
+  showFlash('Product added.');
+  await saveRow(TABLE_PRODUCTS, newProduct);
+  return false;
+}
+
+function openEditModal(id){
+  const p = products.find(x => x.id === id);
+  if(!p) return;
+  document.getElementById('edit_id').value = p.id;
+  document.getElementById('edit_sku').value = p.sku;
+  document.getElementById('edit_name').value = p.name;
+  buildSizeGrid('edit_size_grid', p.sizes);
+  buildPriceGrid('edit_price_grid', p.prices || Object.fromEntries(SIZES.map(size => [size, p.price || 0])));
+  openModal('editModal');
+}
+
+async function handleEdit(e){
+  e.preventDefault();
+  const id = parseInt(document.getElementById('edit_id').value, 10);
+  const p = products.find(x => x.id === id);
+  if(!p) return false;
+  p.sku = document.getElementById('edit_sku').value.trim();
+  p.name = document.getElementById('edit_name').value.trim();
+  p.sizes = readSizeGrid('edit_size_grid');
+  p.prices = readPriceGrid('edit_price_grid');
+  closeModal('editModal');
+  renderTable();
+  showFlash('Product updated.');
+  await saveRow(TABLE_PRODUCTS, p);
+  return false;
+}
+
+async function handleDelete(id){
+  const p = products.find(x => x.id === id);
+  if(!p) return;
+  if(!confirm(`Delete "${p.name}" and all its size data? This cannot be undone.`)) return;
+  products = products.filter(x => x.id !== id);
+  renderTable();
+  showFlash('Product deleted.');
+  await deleteRow(TABLE_PRODUCTS, id);
+}
+
+function escapeHtml(value){
+  return String(value).replace(/[&<>'"]/g, character => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[character]));
+}
+
+function renderDashboardNews(){
+  const container = document.getElementById('dashboardNews');
+  if(!container) return;
+  const sorted = [...news].sort((a,b) => b.createdAt.localeCompare(a.createdAt));
+  if(!sorted.length){
+    container.innerHTML = '<p class="legend">No news published yet.</p>';
+    return;
+  }
+  container.innerHTML = sorted.map(item => {
+    const image = item.attachmentData && item.attachmentType && item.attachmentType.startsWith('image/')
+      ? `<button type="button" onclick="viewDashboardAttachment(${item.id})" title="View ${escapeHtml(item.attachmentName || item.title)}" style="display:block;border:0;background:none;padding:0;margin-top:12px;cursor:pointer;max-width:100%;"><img src="${item.attachmentData}" alt="${escapeHtml(item.attachmentName || item.title)}" style="display:block;max-width:100%;max-height:280px;object-fit:contain;border-radius:7px;"></button>`
+      : item.attachmentData ? `<button type="button" class="btn btn-primary btn-sm" onclick="viewDashboardAttachment(${item.id})" style="margin-top:10px;"><i class="fa-solid fa-paperclip"></i> View ${escapeHtml(item.attachmentName || 'attachment')}</button>` : '';
+    return `<article style="padding:16px 20px;border-bottom:1px solid var(--line);"><h4 style="font-family:'Space Grotesk',sans-serif;font-size:1rem;margin:0 0 5px;">${escapeHtml(item.title)}</h4><p style="color:var(--ink-soft);font-size:.86rem;line-height:1.5;margin:0 0 8px;white-space:pre-wrap;">${escapeHtml(item.content)}</p>${image}<div style="font-size:.74rem;color:var(--ink-soft);margin-top:8px;">Published ${new Date(item.createdAt).toLocaleString()}</div></article>`;
+  }).join('');
+}
+
+function viewDashboardAttachment(id){
+  const item = news.find(entry => entry.id === id);
+  if(!item || !item.attachmentData) return;
+  const title = document.getElementById('attachmentViewerTitle');
+  const content = document.getElementById('attachmentViewerContent');
+  title.textContent = item.attachmentName || 'Attachment';
+  content.innerHTML = '';
+  if(item.attachmentType && item.attachmentType.startsWith('image/')){
+    const image = document.createElement('img');
+    image.src = item.attachmentData;
+    image.alt = item.attachmentName || item.title;
+    content.appendChild(image);
+  }else{
+    const frame = document.createElement('iframe');
+    frame.src = item.attachmentData;
+    frame.title = item.attachmentName || item.title;
+    content.appendChild(frame);
+  }
+  openModal('attachmentViewer');
+}
+
+function renderDashboard(){
+  renderDashboardNews();
+  let low = 0, out = 0;
+  products.forEach(p => {
+    SIZES.forEach(sz => {
+      const qty = p.sizes[sz] || 0;
+      if(qty === 0) out++;
+      else if(qty <= 5) low++;
+    });
+  });
+  document.getElementById('stat-products').textContent = products.length;
+  document.getElementById('stat-low').textContent = low;
+  document.getElementById('stat-out').textContent = out;
+
+  const open = jobOrders.filter(j => j.status !== 'done').slice(0, 5);
+  const body = document.getElementById('dashJobBody');
+  if(!open.length){
+    body.innerHTML = `<tr><td colspan="4" class="text-muted">No open job orders.</td></tr>`;
+    return;
+  }
+  body.innerHTML = open.map(j => {
+    const prod = products.find(p => p.id === j.productId);
+    return `
+      <tr>
+        <td class="sku">${j.jobNo}</td>
+        <td>${prod ? prod.name : '—'}</td>
+        <td><span class="jo-status ${j.status}">${STATUS_LABEL[j.status]}</span></td>
+        <td>${j.due}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function renderOperations(){
+  const body = document.getElementById('operationsBody');
+  if(!body) return;
+  const sorted = [...operations].sort((a,b) => b.date.localeCompare(a.date));
+  document.getElementById('operationTotalQuantity').textContent = operations.reduce((total, item) => total + item.quantity, 0);
+  if(!sorted.length){
+    body.innerHTML = '<tr><td colspan="9" class="text-muted">No operation records yet.</td></tr>';
+    return;
+  }
+  body.innerHTML = sorted.map(item => `<tr>
+    <td><input type="date" value="${escapeHtml(item.date || '')}" onchange="handleOperationFieldChange(${item.id}, 'date', this.value)"></td>
+    <td><input type="text" value="${escapeHtml(item.jobOrder || '')}" onchange="handleOperationFieldChange(${item.id}, 'jobOrder', this.value)"></td>
+    <td><input type="text" value="${escapeHtml(item.productName || '')}" onchange="handleOperationFieldChange(${item.id}, 'productName', this.value)"></td>
+    <td><input type="text" value="${escapeHtml(item.size || '')}" onchange="handleOperationFieldChange(${item.id}, 'size', this.value)"></td>
+    <td><input type="number" min="0" value="${item.quantity || ''}" onchange="handleOperationFieldChange(${item.id}, 'quantity', this.value)"></td>
+    <td><input type="text" value="${escapeHtml(item.name || '')}" onchange="handleOperationFieldChange(${item.id}, 'name', this.value)"></td>
+    <td><input type="text" value="${escapeHtml(item.operation || '')}" onchange="handleOperationFieldChange(${item.id}, 'operation', this.value)"></td>
+    <td><input type="datetime-local" value="${escapeHtml(item.start || '')}" onchange="handleOperationFieldChange(${item.id}, 'start', this.value)"></td>
+    <td><input type="datetime-local" value="${escapeHtml(item.end || '')}" onchange="handleOperationFieldChange(${item.id}, 'end', this.value)"></td>
+    <td><button class="btn btn-danger btn-sm" onclick="handleDeleteOperation(${item.id})"><i class="fa-solid fa-trash"></i></button></td>
+  </tr>`).join('');
+}
+
+async function handleOperationFieldChange(id, field, value){
+  const record = operations.find(item => item.id === id);
+  if(!record) return;
+  record[field] = field === 'quantity' ? (parseInt(value, 10) || 0) : value;
+  document.getElementById('operationTotalQuantity').textContent = operations.reduce((total, item) => total + (item.quantity || 0), 0);
+  await saveRow(TABLE_OPERATIONS, record);
+}
+
+function focusOperationEntry(){
+  const sheetDate = document.getElementById('operation_sheet_date');
+  if(sheetDate && !sheetDate.value) sheetDate.value = new Date().toISOString().slice(0, 10);
+  const entry = document.getElementById('entry_job');
+  if(entry) entry.focus();
+}
+
+async function handleInlineOperation(){
+  const record = {
+    id: nextOperationId++,
+    date: document.getElementById('operation_sheet_date').value,
+    jobOrder: document.getElementById('entry_job').value.trim(),
+    productName: document.getElementById('entry_product').value.trim(),
+    size: document.getElementById('entry_size').value,
+    quantity: parseInt(document.getElementById('entry_quantity').value, 10) || 0,
+    name: document.getElementById('entry_name').value.trim(),
+    operation: document.getElementById('entry_operation').value.trim(),
+    start: document.getElementById('entry_start').value,
+    end: document.getElementById('entry_end').value,
+  };
+  operations.push(record);
+  document.querySelectorAll('#operationEntryBody input').forEach(input => { input.value = ''; });
+  document.getElementById('entry_size').value = 'XS';
+  renderOperations();
+  showFlash('Operation record saved.');
+  await saveRow(TABLE_OPERATIONS, record);
+}
+
+function formatRecordDate(value){
+  return value ? value.replace('T', ' ') : '—';
+}
+
+async function handleAddOperation(e){
+  e.preventDefault();
+  const record = {
+    id: nextOperationId++,
+    date: document.getElementById('operation_date').value,
+    jobOrder: document.getElementById('operation_job').value.trim(),
+    productName: document.getElementById('operation_product').value.trim(),
+    size: document.getElementById('operation_size').value,
+    quantity: parseInt(document.getElementById('operation_quantity').value, 10) || 0,
+    name: document.getElementById('operation_name').value.trim(),
+    operation: document.getElementById('operation_type').value.trim(),
+    start: document.getElementById('operation_start').value,
+    end: document.getElementById('operation_end').value,
+  };
+  operations.push(record);
+  e.target.reset();
+  closeModal('operationModal');
+  renderOperations();
+  showFlash('Operation record saved.');
+  await saveRow(TABLE_OPERATIONS, record);
+  return false;
+}
+
+async function handleDeleteOperation(id){
+  const record = operations.find(item => item.id === id);
+  if(!record || !confirm(`Delete the operation record for ${record.jobOrder}?`)) return;
+  operations = operations.filter(item => item.id !== id);
+  renderOperations();
+  showFlash('Operation record deleted.');
+  await deleteRow(TABLE_OPERATIONS, id);
+}
+
+function populateJoProductSelect(){
+  const sel = document.getElementById('jo_product');
+  sel.innerHTML = products.map(p => `<option value="${p.id}">${p.name} (${p.sku})</option>`).join('');
+}
+
+function renderJobOrders(){
+  populateJoProductSelect();
+  const sorted = [...jobOrders].sort((a,b) => a.due.localeCompare(b.due));
+  document.getElementById('jobCount').textContent = sorted.length;
+  const body = document.getElementById('joBody');
+  if(!sorted.length){
+    body.innerHTML = `<tr><td colspan="7" class="text-muted">No job orders yet.</td></tr>`;
+    return;
+  }
+  body.innerHTML = sorted.map(j => {
+    const prod = products.find(p => p.id === j.productId);
+    const pdfButton = j.pdfData ? `<button type="button" class="btn btn-outline btn-sm" onclick="viewJobOrderPdf(${j.id})" title="View ${j.pdfName || 'PDF'}"><i class="fa-solid fa-file-pdf"></i> View PDF</button>` : '<button type="button" class="btn btn-outline btn-sm" disabled><i class="fa-solid fa-file-pdf"></i> No PDF</button>';
+    const status = LEGACY_STATUS[j.status] || j.status;
+    const statusSelect = `<select class="jo-status status-select ${status}" aria-label="Status for ${j.jobNo}" onchange="handleJobStatusChange(${j.id}, this.value)"><option value="printing" ${status === 'printing' ? 'selected' : ''}>Printing</option><option value="heatpress" ${status === 'heatpress' ? 'selected' : ''}>Heatpress</option><option value="cut" ${status === 'cut' ? 'selected' : ''}>Cut</option><option value="sewing" ${status === 'sewing' ? 'selected' : ''}>Sewing</option><option value="done" ${status === 'done' ? 'selected' : ''}>Done</option></select>`;
+    return `<tr><td class="sku">${j.jobNo}</td><td>${prod ? prod.name : '—'}</td><td style="text-align:center;">${j.qty}</td><td>${statusSelect}</td><td>${j.due}</td><td>${pdfButton}</td><td><div class="row-actions"><button class="btn btn-danger btn-sm" onclick="handleDeleteJobOrder(${j.id})"><i class="fa-solid fa-trash"></i></button></div></td></tr>`;
+  }).join('');
+}
+
+async function handleJobStatusChange(id, status){
+  const job = jobOrders.find(item => item.id === id);
+  if(!job || !STATUS_LABEL[status]) return;
+  job.status = status;
+  renderJobOrders();
+  renderDashboard();
+  showFlash('Job order status updated.');
+  await saveRow(TABLE_JOBORDERS, job);
+}
+
+function readPdfAsDataUrl(file){
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+}
+
+function viewJobOrderPdf(id){
+  const job = jobOrders.find(item => item.id === id);
+  if(!job || !job.pdfData) return;
+  const pdfWindow = window.open('', '_blank');
+  if(!pdfWindow){
+    showFlash('Allow pop-ups to view the PDF.', true);
+    return;
+  }
+  pdfWindow.document.title = job.pdfName || 'Product PDF';
+  pdfWindow.document.body.style.margin = '0';
+  const frame = pdfWindow.document.createElement('iframe');
+  frame.src = job.pdfData;
+  frame.title = job.pdfName || 'Product PDF';
+  frame.style.cssText = 'border:0;width:100vw;height:100vh;';
+  pdfWindow.document.body.appendChild(frame);
+}
+
+async function handleAddJobOrder(e){
+  e.preventDefault();
+  const productId = parseInt(document.getElementById('jo_product').value, 10);
+  const qty = parseInt(document.getElementById('jo_qty').value, 10) || 0;
+  const due = document.getElementById('jo_due').value;
+  const status = document.getElementById('jo_status').value;
+  const pdfFile = document.getElementById('jo_pdf').files[0];
+  if(pdfFile && pdfFile.size > 10 * 1024 * 1024){
+    showFlash('The PDF must be 10 MB or smaller.', true);
+    return false;
+  }
+  if(pdfFile && pdfFile.type !== 'application/pdf' && !pdfFile.name.toLowerCase().endsWith('.pdf')){
+    showFlash('Please attach a PDF file.', true);
+    return false;
+  }
+  let pdfData = null;
+  if(pdfFile){
+    try{
+      pdfData = await readPdfAsDataUrl(pdfFile);
+    }catch(err){
+      showFlash('Could not read the PDF attachment.', true);
+      return false;
+    }
+  }
+  const newJob = { id: nextJoId++, jobNo: 'JO-' + (nextJoNum++), productId, qty, status, due, pdfName: pdfFile ? pdfFile.name : '', pdfData };
+  jobOrders.push(newJob);
+  e.target.reset();
+  closeModal('joModal');
+  renderJobOrders();
+  showFlash('Job order created.');
+  await saveRow(TABLE_JOBORDERS, newJob);
+  return false;
+}
+
+async function handleDeleteJobOrder(id){
+  const j = jobOrders.find(x => x.id === id);
+  if(!j || !confirm(`Delete job order ${j.jobNo}?`)) return;
+  jobOrders = jobOrders.filter(x => x.id !== id);
+  renderJobOrders();
+  showFlash('Job order deleted.');
+  await deleteRow(TABLE_JOBORDERS, id);
+}
+
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => {
+    if(e.target === overlay) overlay.classList.remove('open');
+  });
+});
+
+if(sessionStorage.getItem('stockline-authenticated') === 'true'){
+  document.getElementById('username').value = CREDENTIALS.username;
+  document.getElementById('password').value = CREDENTIALS.password;
+  handleLogin({preventDefault(){}});
+}
+</script>
+</body>
+</html>

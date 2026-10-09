@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Operation Record</title>
+<style>
+  body{ font-family: Arial, Helvetica, sans-serif; padding:24px; background:#fff; }
+  table{ border-collapse:collapse; width:100%; max-width:900px; }
+  th, td{ border:1px solid #000; padding:6px 8px; font-size:14px; }
+  th{ background:#dbe5f1; text-transform:uppercase; font-size:12px; }
+  td input, td select{ width:100%; border:none; font:inherit; font-size:14px; padding:2px; box-sizing:border-box; }
+  td input:focus, td select:focus{ outline:1px solid #2F5D9A; }
+  .date-row td{ background:#f9dcc4; font-weight:bold; text-transform:uppercase; width:90px; }
+  .date-row .date-input-cell{ background:#fff; }
+  tfoot td{ background:#dbe5f1; font-weight:bold; }
+  .actions{ margin-bottom:12px; }
+  button{ padding:6px 12px; font-size:13px; cursor:pointer; }
+</style>
+</head>
+<body>
+
+<div class="actions">
+  <button onclick="addRow()">+ Add Row</button>
+</div>
+
+<table id="opTable">
+  <tr class="date-row">
+    <td>DATE:</td>
+    <td class="date-input-cell" colspan="6"><input type="date" id="opDate"></td>
+  </tr>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Size</th>
+      <th>Qty</th>
+      <th>Name</th>
+      <th>Operations</th>
+      <th>Start</th>
+      <th>End</th>
+    </tr>
+  </thead>
+  <tbody id="opBody">
+    <!-- rows inserted by JS -->
+  </tbody>
+  <tfoot>
+    <tr>
+      <td colspan="2" style="text-align:right;">TOTAL:</td>
+      <td id="opTotal">0</td>
+      <td colspan="4"></td>
+    </tr>
+  </tfoot>
+</table>
+ 
+<script>
+function makeRow(){
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td><input type="text" placeholder="Product name"></td>
+    <td><input type="text" placeholder="e.g. 2XL-110"></td>
+    <td><input type="number" min="0" class="qty" oninput="updateTotal()"></td>
+    <td><input type="text" placeholder="Worker name"></td>
+    <td><input type="text" placeholder="Sewing"></td>
+    <td><input type="datetime-local"></td>
+    <td><input type="datetime-local"></td>
+  `;
+  return tr;
+}
+
+function addRow(count){
+  const body = document.getElementById('opBody');
+  for(let i = 0; i < (count || 1); i++){
+    body.appendChild(makeRow());
+  }
+}
+
+function updateTotal(){
+  const qtys = document.querySelectorAll('#opBody .qty');
+  let total = 0;
+  qtys.forEach(input => { total += parseInt(input.value, 10) || 0; });
+  document.getElementById('opTotal').textContent = total;
+}
+
+// start with 7 blank rows, like a ready-to-fill sheet
+addRow(7);
+</script>
+
+</body>
+</html>
