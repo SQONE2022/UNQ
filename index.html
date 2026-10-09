@@ -74,6 +74,15 @@
     background:#FAFAF8;
   }
   .field input:focus{outline:2px solid var(--denim); outline-offset:1px; border-color:var(--denim);}
+  .login-hint{
+    font-size:0.76rem;
+    color:var(--ink-soft);
+    background:var(--paper);
+    border:1px dashed var(--line);
+    border-radius:7px;
+    padding:9px 11px;
+    margin-bottom:18px;
+  }
   .login-error{
     display:none;
     font-size:0.82rem;
@@ -145,6 +154,9 @@
     border-bottom:1px solid var(--line);
   }
   .topbar-left{display:flex; align-items:center; gap:14px;}
+  .topbar-brand{display:flex; align-items:center; gap:10px;}
+  .topbar-brand .login-mark{margin:0; width:32px; height:32px; font-size:0.85rem;}
+  .topbar-brand span{font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:1.02rem;}
   .topbar-user{display:flex; align-items:center; gap:12px; font-size:0.85rem; color:var(--ink-soft);}
   .topbar-user b{color:var(--ink);}
   .save-status{font-size:0.78rem; color:var(--green); opacity:0; transition:opacity .25s ease;}
@@ -268,7 +280,7 @@
     <p class="login-sub">Manage products and size-level stock.</p>
 
     <div class="login-error" id="loginError">
-      <i class="fa-solid fa-circle-exclamation"></i> <span id="loginErrorMsg">Incorrect username or password.</span>
+      <i class="fa-solid fa-circle-exclamation"></i> Incorrect username or password.
     </div>
 
     <form id="loginForm" onsubmit="return handleLogin(event)">
@@ -279,6 +291,9 @@
       <div class="field">
         <label for="password">Password</label>
         <input type="password" id="password" autocomplete="current-password" required>
+      </div>
+      <div class="login-hint">
+        <i class="fa-solid fa-circle-info"></i> Demo credentials — username <b>admin</b>, password <b>admin123</b>
       </div>
       <button type="submit" class="btn btn-primary btn-block">Sign in</button>
     </form>
@@ -525,10 +540,9 @@
 
 <script>
 const SIZES = ['XS','S','M','L','XL'];
-const TOKEN_KEY = 'stockline-token';
-let authToken = sessionStorage.getItem(TOKEN_KEY) || '';
+const CREDENTIALS = { username: 'admin', password: 'admin123' };
 
-// Starter data, used until something has been saved to the server
+// In-memory demo data (resets on page reload — no backend in this demo)
 let products = [
   { id: 1, sku: 'TS-BLK-001', name: 'Classic Black Tee', price: 499, reorder_level: 5,
     sizes: { XS: 3, S: 12, M: 20, L: 14, XL: 0 } },
@@ -549,91 +563,36 @@ let nextJoNum = 1044;
 
 const STATUS_LABEL = { pending: 'Pending', progress: 'In progress', done: 'Done' };
 
-function esc(s){
-  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-}
+const STORAGE_KEY = 'stockline-data';
 
-/* ---------- API helper ---------- */
-async function api(path, options = {}){
-  const headers = { 'Content-Type': 'application/json' };
-  if(authToken) headers['Authorization'] = 'Bearer ' + authToken;
-  const res = await fetch(path, { ...options, headers });
-  if(res.status === 401 && path !== '/api/login'){
-    showLogin();
-    throw new Error('Session expired');
-  }
-  return res;
-}
-
-function showLogin(){
-  authToken = '';
-  sessionStorage.removeItem(TOKEN_KEY);
-  document.getElementById('dashboard').style.display = 'none';
-  document.getElementById('loginScreen').style.display = 'flex';
-}
-
-async function enterApp(username){
-  document.getElementById('whoami').textContent = username;
-  document.getElementById('loginScreen').style.display = 'none';
-  document.getElementById('dashboard').style.display = 'block';
-  await loadData();
-  buildSizeGrid('add_size_grid');
-  renderTable();
-  renderJobOrders();
-  renderDashboard();
-  showView('dashboard');
-}
-
-/* ---------- Auth ---------- */
 async function handleLogin(e){
   e.preventDefault();
-  const username = document.getElementById('username').value.trim();
-  const password = document.getElementById('password').value;
+  const u = document.getElementById('username').value.trim();
+  const p = document.getElementById('password').value;
   const err = document.getElementById('loginError');
-  try{
-    const res = await api('/api/login', { method: 'POST', body: JSON.stringify({ username, password }) });
-    const body = await res.json().catch(() => ({}));
-    if(res.ok){
-      err.style.display = 'none';
-      authToken = body.token;
-      sessionStorage.setItem(TOKEN_KEY, authToken);
-      await enterApp(body.username);
-    } else {
-      document.getElementById('loginErrorMsg').textContent = body.error || 'Incorrect username or password.';
-      err.style.display = 'flex';
-    }
-  } catch(ex){
-    document.getElementById('loginErrorMsg').textContent = 'Could not reach the server.';
+  if(u === CREDENTIALS.username && p === CREDENTIALS.password){
+    err.style.display = 'none';
+    document.getElementById('whoami').textContent = u;
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+    await loadData();
+    buildSizeGrid('add_size_grid');
+    renderTable();
+    renderJobOrders();
+    renderDashboard();
+    showView('dashboard');
+  } else {
     err.style.display = 'flex';
   }
   return false;
 }
 
-async function handleLogout(){
-  try{ await api('/api/logout', { method: 'POST' }); } catch(_){}
-  showLogin();
-  document.getElementById('loginForm').reset();
-  document.getElementById('loginError').style.display = 'none';
-}
-
-// Resume an existing session on page load
-(async function resume(){
-  if(!authToken) return;
-  try{
-    const res = await api('/api/me');
-    if(res.ok){ const me = await res.json(); await enterApp(me.username); }
-    else showLogin();
-  } catch(_){ showLogin(); }
-})();
-
-/* ---------- Data ---------- */
 async function loadData(){
   try{
-    const res = await api('/api/data');
-    if(!res.ok) throw new Error('Load failed');
-    const data = await res.json();
-    if(Array.isArray(data.products)){
-      products = data.products;
+    const result = await window.storage.get(STORAGE_KEY, false);
+    if(result && result.value){
+      const data = JSON.parse(result.value);
+      if(Array.isArray(data.products)) products = data.products;
       if(typeof data.nextId === 'number') nextId = data.nextId;
       if(Array.isArray(data.jobOrders)) jobOrders = data.jobOrders;
       if(typeof data.nextJoId === 'number') nextJoId = data.nextJoId;
@@ -641,15 +600,16 @@ async function loadData(){
       flashSaveStatus('Loaded your saved data.', false);
     }
   } catch(err){
-    console.log('Using starter data.', err);
+    // No saved data yet, or storage unavailable — fall back to the demo data already in memory.
+    console.log('No saved data found, starting with demo data.', err);
   }
 }
 
 async function saveData(){
   const payload = { products, nextId, jobOrders, nextJoId, nextJoNum };
   try{
-    const res = await api('/api/data', { method: 'PUT', body: JSON.stringify(payload) });
-    if(res.ok){
+    const result = await window.storage.set(STORAGE_KEY, JSON.stringify(payload), false);
+    if(result){
       flashSaveStatus('Saved.', false);
       showFlash('Your changes have been saved.');
     } else {
@@ -669,7 +629,6 @@ function flashSaveStatus(msg, isError){
   setTimeout(() => el.classList.remove('show'), 2400);
 }
 
-/* ---------- UI ---------- */
 function toggleSidebar(){
   document.getElementById('sidebar').classList.toggle('collapsed');
 }
@@ -681,6 +640,13 @@ function showView(view){
     btn.classList.toggle('active', btn.dataset.view === view);
   });
   if(view === 'dashboard') renderDashboard();
+}
+
+function handleLogout(){
+  document.getElementById('dashboard').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('loginForm').reset();
+  document.getElementById('loginError').style.display = 'none';
 }
 
 function buildSizeGrid(containerId, values){
@@ -737,9 +703,9 @@ function renderTable(){
 
     return `
       <tr>
-        <td class="sku">${esc(p.sku)}</td>
+        <td class="sku">${p.sku}</td>
         <td>
-          ${esc(p.name)}<br>
+          ${p.name}<br>
           <span class="price-note">₱${p.price.toFixed(2)}</span>
         </td>
         ${cells}
@@ -755,10 +721,7 @@ function renderTable(){
   }).join('');
 }
 
-function openModal(id){
-  if(id === 'joModal') populateJoProductSelect();
-  document.getElementById(id).classList.add('open');
-}
+function openModal(id){ document.getElementById(id).classList.add('open'); }
 function closeModal(id){ document.getElementById(id).classList.remove('open'); }
 
 function handleAdd(e){
@@ -774,7 +737,7 @@ function handleAdd(e){
   buildSizeGrid('add_size_grid');
   closeModal('addModal');
   renderTable();
-  showFlash('Product added. Click Save to keep your changes.');
+  showFlash('Product added.');
   return false;
 }
 
@@ -802,7 +765,7 @@ function handleEdit(e){
   p.sizes = readSizeGrid('edit_size_grid');
   closeModal('editModal');
   renderTable();
-  showFlash('Product updated. Click Save to keep your changes.');
+  showFlash('Product updated.');
   return false;
 }
 
@@ -812,7 +775,7 @@ function handleDelete(id){
   if(!confirm(`Delete "${p.name}" and all its size data? This cannot be undone.`)) return;
   products = products.filter(x => x.id !== id);
   renderTable();
-  showFlash('Product deleted. Click Save to keep your changes.');
+  showFlash('Product deleted.');
 }
 
 function renderDashboard(){
@@ -840,10 +803,10 @@ function renderDashboard(){
     const prod = products.find(p => p.id === j.productId);
     return `
       <tr>
-        <td class="sku">${esc(j.jobNo)}</td>
-        <td>${prod ? esc(prod.name) : '—'}</td>
+        <td class="sku">${j.jobNo}</td>
+        <td>${prod ? prod.name : '—'}</td>
         <td><span class="jo-status ${j.status}">${STATUS_LABEL[j.status]}</span></td>
-        <td>${esc(j.due)}</td>
+        <td>${j.due}</td>
       </tr>
     `;
   }).join('');
@@ -851,7 +814,7 @@ function renderDashboard(){
 
 function populateJoProductSelect(){
   const sel = document.getElementById('jo_product');
-  sel.innerHTML = products.map(p => `<option value="${p.id}">${esc(p.name)} (${esc(p.sku)})</option>`).join('');
+  sel.innerHTML = products.map(p => `<option value="${p.id}">${p.name} (${p.sku})</option>`).join('');
 }
 
 function renderJobOrders(){
@@ -867,11 +830,11 @@ function renderJobOrders(){
     const prod = products.find(p => p.id === j.productId);
     return `
       <tr>
-        <td class="sku">${esc(j.jobNo)}</td>
-        <td>${prod ? esc(prod.name) : '—'}</td>
+        <td class="sku">${j.jobNo}</td>
+        <td>${prod ? prod.name : '—'}</td>
         <td style="text-align:center;">${j.qty}</td>
         <td><span class="jo-status ${j.status}">${STATUS_LABEL[j.status]}</span></td>
-        <td>${esc(j.due)}</td>
+        <td>${j.due}</td>
         <td>
           <div class="row-actions">
             <button class="btn btn-danger btn-sm" onclick="handleDeleteJobOrder(${j.id})"><i class="fa-solid fa-trash"></i></button>
@@ -893,7 +856,7 @@ function handleAddJobOrder(e){
   e.target.reset();
   closeModal('joModal');
   renderJobOrders();
-  showFlash('Job order created. Click Save to keep your changes.');
+  showFlash('Job order created.');
   return false;
 }
 
@@ -903,7 +866,7 @@ function handleDeleteJobOrder(id){
   if(!confirm(`Delete job order ${j.jobNo}?`)) return;
   jobOrders = jobOrders.filter(x => x.id !== id);
   renderJobOrders();
-  showFlash('Job order deleted. Click Save to keep your changes.');
+  showFlash('Job order deleted.');
 }
 
 document.querySelectorAll('.modal-overlay').forEach(overlay => {
