@@ -256,6 +256,15 @@
   .row-actions{display:flex; gap:6px; justify-content:flex-end;}
   .text-muted{color:var(--ink-soft);}
   .legend{font-size:0.78rem; color:var(--ink-soft); padding:14px 20px 18px;}
+  .stock-quantity-table-wrap{overflow-x:hidden}
+  .stock-quantity-table{width:100%;min-width:0;table-layout:fixed}
+  .stock-quantity-table th,.stock-quantity-table td{padding:8px 4px;font-size:.76rem;overflow-wrap:anywhere}
+  .stock-quantity-table th:first-child,.stock-quantity-table td:first-child{width:10%}
+  .stock-quantity-table th:nth-child(2),.stock-quantity-table td:nth-child(2){width:14%}
+  .stock-quantity-table th:last-child,.stock-quantity-table td:last-child{width:8%}
+  .stock-quantity-table input{display:block;width:100%;min-width:0;padding:6px 3px;border:1px solid var(--line);border-radius:5px;font:inherit;text-align:center}
+  .stock-quantity-table input:focus{outline:2px solid var(--denim);outline-offset:1px}
+  @media(max-width:720px){.stock-quantity-table th,.stock-quantity-table td{padding:5px 2px;font-size:.64rem}.stock-quantity-table input{padding:4px 1px;font-size:.68rem}}
 
   /* ---------- Modal ---------- */
   .modal-overlay{
@@ -347,9 +356,11 @@
       <button class="nav-item active" data-view="dashboard" onclick="window.location.href='dashboard.html'"><i class="fa-solid fa-gauge-high"></i> Dashboard</button>
       <button class="nav-item" data-view="stocks" onclick="window.location.href='stocks.html'"><i class="fa-solid fa-ruler"></i> Stocks</button>
       <button class="nav-item" data-view="joborders" onclick="window.location.href='joborder.html'"><i class="fa-solid fa-clipboard-list"></i> Job Order Tracker</button>
+      <button class="nav-item" onclick="window.location.href='orders.html'"><i class="fa-solid fa-boxes-stacked"></i> Orders</button>
       <button class="nav-item" onclick="window.location.href='news.html'"><i class="fa-solid fa-newspaper"></i> News</button>
       <button class="nav-item" data-view="operations" onclick="window.location.href='operation-records.html'"><i class="fa-solid fa-clipboard-check"></i> Operation Records</button>
       <button class="nav-item" onclick="window.location.href='live-seller-tracker.html'"><i class="fa-solid fa-chart-line"></i> Live Seller Tracker</button>
+      <button class="nav-item" onclick="window.location.href='tiktok-calendar.html'"><i class="fa-brands fa-tiktok"></i> TikTok Calendar</button>
       <button class="nav-item" onclick="window.location.href='sewer-record.html'"><i class="fa-solid fa-user-gear"></i> Sewer Record</button>
     </div>
 
@@ -394,9 +405,19 @@
               <div class="stat-value" id="stat-out">0</div>
             </div>
           </div>
+          <div class="card" style="margin-top:24px; margin-bottom:24px;">
+            <div class="card-header">
+              <h3><i class="fa-solid fa-circle-xmark" style="color:var(--red);"></i> Out of stock products</h3>
+            </div>
+            <div id="outOfStockProducts"></div>
+          </div>
+          <div class="card" style="margin-top:24px; margin-bottom:24px;">
+            <div class="card-header"><h3><i class="fa-solid fa-newspaper" style="color:var(--denim);"></i> Latest News</h3></div>
+            <div id="dashboardNews"></div>
+          </div>
           <div class="card">
             <div class="card-header">
-              <h3><i class="fa-solid fa-clipboard-list" style="color:var(--denim);"></i> Open job orders</h3>
+              <h3><i class="fa-solid fa-clipboard-list" style="color:var(--denim);"></i> JOB ORDER</h3>
             </div>
             <div class="table-wrap">
               <table>
@@ -406,10 +427,6 @@
                 <tbody id="dashJobBody"></tbody>
               </table>
             </div>
-          </div>
-          <div class="card" style="margin-top:24px;">
-            <div class="card-header"><h3><i class="fa-solid fa-newspaper" style="color:var(--denim);"></i> Latest News</h3></div>
-            <div id="dashboardNews"></div>
           </div>
         </div>
 
@@ -443,6 +460,9 @@
                     <th style="text-align:center;">M<br></th>
                     <th style="text-align:center;">L<br></th>
                     <th style="text-align:center;">XL<br></th>
+                    <th style="text-align:center;">2XL<br></th>
+                    <th style="text-align:center;">3XL<br></th>
+                    <th style="text-align:center;">Other<br></th>
                     <th style="text-align:center;">Total</th>
                     <th></th>
                   </tr>
@@ -451,9 +471,24 @@
               </table>
             </div>
             <p class="legend">
+              Available = real stock − reserved stock − non-cancelled/non-returned order quantities across all dates.
+            </p>
+            <p class="legend">
               <span class="badge badge-green">green</span> = healthy stock &nbsp;
               <span class="badge badge-red">red</span> = out of stock
             </p>
+          </div>
+
+          <div class="card" style="margin-top:20px;">
+            <div class="card-header"><h3><i class="fa-solid fa-boxes-stacked" style="color:var(--denim);"></i> Real Stock by Size</h3></div>
+            <div class="table-wrap stock-quantity-table-wrap"><table class="stock-quantity-table"><thead><tr><th>SKU</th><th>Product</th><th style="text-align:center;">XS</th><th style="text-align:center;">S</th><th style="text-align:center;">M</th><th style="text-align:center;">L</th><th style="text-align:center;">XL</th><th style="text-align:center;">2XL</th><th style="text-align:center;">3XL</th><th style="text-align:center;">Other</th><th style="text-align:center;">Total</th></tr></thead><tbody id="realStockBody"></tbody></table></div>
+            <p class="legend">Physical stock on hand. Edit these quantities to update real stock.</p>
+          </div>
+
+          <div class="card" style="margin-top:20px;">
+            <div class="card-header"><h3><i class="fa-solid fa-box-open" style="color:var(--denim);"></i> Reserved Stock by Size</h3></div>
+            <div class="table-wrap stock-quantity-table-wrap"><table class="stock-quantity-table"><thead><tr><th>SKU</th><th>Product</th><th style="text-align:center;">XS</th><th style="text-align:center;">S</th><th style="text-align:center;">M</th><th style="text-align:center;">L</th><th style="text-align:center;">XL</th><th style="text-align:center;">2XL</th><th style="text-align:center;">3XL</th><th style="text-align:center;">Other</th><th style="text-align:center;">Total</th></tr></thead><tbody id="reservedStockBody"></tbody></table></div>
+            <p class="legend">Reserved quantities are subtracted from real stock, along with sold orders, to calculate available stock.</p>
           </div>
         </div>
 
@@ -491,7 +526,7 @@
     <h3><i class="fa-solid fa-clipboard-check" style="color:var(--denim);"></i> Add Operation Record</h3>
     <form onsubmit="return handleAddOperation(event)">
       <div class="form-row"><div class="form-group"><label for="operation_date">Date</label><input type="date" id="operation_date" required></div><div class="form-group"><label for="operation_job">Job Order Number</label><input type="text" id="operation_job" placeholder="JO-1044" required></div></div>
-      <div class="form-row"><div class="form-group"><label for="operation_product">Product Name</label><input type="text" id="operation_product" required></div><div class="form-group"><label for="operation_size">Size</label><select id="operation_size" required><option value="XS">XS</option><option value="S">S</option><option value="M">M</option><option value="L">L</option><option value="XL">XL</option></select></div></div>
+      <div class="form-row"><div class="form-group"><label for="operation_product">Product Name</label><input type="text" id="operation_product" required></div><div class="form-group"><label for="operation_size">Size</label><select id="operation_size" required><option value="XS">XS</option><option value="S">S</option><option value="M">M</option><option value="L">L</option><option value="XL">XL</option><option value="2XL">2XL</option><option value="3XL">3XL</option><option value="Other">Other</option></select></div></div>
       <div class="form-row"><div class="form-group"><label for="operation_quantity">Quantity</label><input type="number" id="operation_quantity" min="1" required></div><div class="form-group"><label for="operation_name">Name</label><input type="text" id="operation_name" required></div></div>
       <div class="form-group"><label for="operation_type">Operation</label><input type="text" id="operation_type" placeholder="Printing, sewing, heatpress..." required></div>
       <div class="form-row"><div class="form-group"><label for="operation_start">Start</label><input type="datetime-local" id="operation_start" required></div><div class="form-group"><label for="operation_end">End</label><input type="datetime-local" id="operation_end"></div></div>
@@ -574,10 +609,12 @@
 </div>
 
 <script src="database.js"></script>
+<script src="tiktok-campaigns.js"></script>
 <script>
-const SIZES = ['XS','S','M','L','XL'];
+const SIZES = ['XS','S','M','L','XL','2XL','3XL','Other'];
 const CREDENTIALS = { username: 'admin', password: 'admin123' };
 let products = [];
+let soldUnitsBySku = new Map();
 let jobOrders = [];
 let news = [];
 let operations = [];
@@ -619,6 +656,11 @@ async function handleLogin(e){
     loginBtn.textContent = 'Loading your data…';
 
     await loadAppData();
+    products = products.map(product => ({
+      ...product,
+      reservedSizes:Object.fromEntries(SIZES.map(size => [size, Math.max(0, Number(product.reservedSizes?.[size]) || 0)])),
+    }));
+    await loadOrderSalesForStock();
     await migrateProductPrices();
     await loadNewsData();
     await loadOperationsData();
@@ -698,6 +740,61 @@ function readPriceGrid(containerId){
   return out;
 }
 
+function stockSkuKey(sku){
+  return String(sku || '').trim().toLocaleLowerCase();
+}
+
+function stockSizeFromVariation(variation){
+  const normalized = String(variation || '').toUpperCase().replace(/XXXL/g, '3XL').replace(/XXL/g, '2XL');
+  const match = normalized.match(/(?:^|[^A-Z0-9])(2XL|3XL|XS|XL|S|M|L)(?=$|[^A-Z0-9])/);
+  return match ? match[1] : 'Other';
+}
+
+function salesOrderIsExcluded(order){
+  const category = String(order.category || '').trim().toUpperCase();
+  if(['CANCELLED','RETURNED BY CUSTOMER','AFFILIATE','SHOPEE'].includes(category)){
+    return category === 'CANCELLED' || category === 'RETURNED BY CUSTOMER';
+  }
+  const status = String(order.status || '').toLowerCase().trim();
+  return /\b(cancelled|canceled|void|return|returned|refund|refunded)\b/.test(status);
+}
+
+async function loadOrderSalesForStock(){
+  const [orders, manualProducts] = await Promise.all([
+    loadTable('sellerorders'),
+    loadTable('sellerorderproducts'),
+  ]);
+  const deductions = new Map();
+  const addDeduction = (sku, size, quantity) => {
+    const key = stockSkuKey(sku);
+    if(!key || !SIZES.includes(size)) return;
+    if(!deductions.has(key)) deductions.set(key, Object.fromEntries(SIZES.map(itemSize => [itemSize, 0])));
+    deductions.get(key)[size] += Math.max(0, Number(quantity) || 0);
+  };
+
+  (orders || []).filter(order => !salesOrderIsExcluded(order)).forEach(order => {
+    addDeduction(order.sku, stockSizeFromVariation(order.variation), order.quantity);
+  });
+  (manualProducts || []).forEach(product => {
+    SIZES.forEach(size => addDeduction(product.sku, size, product.sizes?.[size]));
+  });
+  soldUnitsBySku = deductions;
+}
+
+function availableStock(product, size){
+  const startingStock = Number(product.sizes?.[size]) || 0;
+  const reserved = Math.max(0, Number(product.reservedSizes?.[size]) || 0);
+  const sold = soldUnitsBySku.get(stockSkuKey(product.sku))?.[size] || 0;
+  return startingStock - reserved - sold;
+}
+
+window.addEventListener('focus', async() => {
+  if(!products.length || document.getElementById('dashboard').style.display === 'none') return;
+  await loadOrderSalesForStock();
+  renderTable();
+  renderDashboard();
+});
+
 async function migrateProductPrices(){
   const updates = products.filter(product => !product.prices).map(product => {
     const legacyPrice = Number(product.price) || 0;
@@ -737,15 +834,16 @@ function renderTable(){
   const body = document.getElementById('tableBody');
 
   if(!filtered.length){
-    body.innerHTML = `<tr><td colspan="9" class="text-muted">No products found.</td></tr>`;
+    body.innerHTML = `<tr><td colspan="${SIZES.length + 4}" class="text-muted">No products found.</td></tr>`;
+    renderStockQuantityTables(filtered);
     return;
   }
 
   body.innerHTML = filtered.map(p => {
-    const total = SIZES.reduce((sum, s) => sum + (p.sizes[s] || 0), 0);
+    const total = SIZES.reduce((sum, s) => sum + availableStock(p, s), 0);
     const cells = SIZES.map(s => {
-      const qty = p.sizes[s] || 0;
-      const cls = qty === 0 ? 'badge-red' : 'badge-green';
+      const qty = availableStock(p, s);
+      const cls = qty <= 0 ? 'badge-red' : 'badge-green';
       const price = p.prices?.[s] ?? p.price ?? 0;
       return `<td style="text-align:center;"><span class="badge ${cls}">${qty}</span><br><span class="price-note">₱${price.toFixed(2)}</span></td>`;
     }).join('');
@@ -767,7 +865,55 @@ function renderTable(){
       </tr>
     `;
   }).join('');
+  renderStockQuantityTables(filtered);
 }
+
+function renderStockQuantityTables(filteredProducts = products){
+  const renderQuantityRows = (field, bodyId) => {
+    const body = document.getElementById(bodyId);
+    if(!filteredProducts.length){
+      body.innerHTML = `<tr><td colspan="${SIZES.length + 3}" class="text-muted">No products found.</td></tr>`;
+      return;
+    }
+    body.innerHTML = [...filteredProducts].sort((a, b) => a.name.localeCompare(b.name)).map(product => {
+      const values = SIZES.map(size => Math.max(0, Number((field === 'real' ? product.sizes : product.reservedSizes)?.[size]) || 0));
+      const total = values.reduce((sum, quantity) => sum + quantity, 0);
+      return `<tr>
+        <td class="sku">${escapeHtml(product.sku)}</td>
+        <td>${escapeHtml(product.name)}</td>
+        ${SIZES.map((size, index) => `<td style="text-align:center;"><input type="number" min="0" step="1" value="${values[index]}" data-stock-product="${product.id}" data-stock-field="${field}" data-stock-size="${size}" aria-label="${field === 'real' ? 'Real' : 'Reserved'} stock for ${escapeHtml(product.sku)} size ${size}"></td>`).join('')}
+        <td style="text-align:center;font-weight:800;">${total}</td>
+      </tr>`;
+    }).join('');
+  };
+  renderQuantityRows('real', 'realStockBody');
+  renderQuantityRows('reserved', 'reservedStockBody');
+}
+
+async function handleStockQuantityChange(input){
+  const product = products.find(item => Number(item.id) === Number(input.dataset.stockProduct));
+  const quantity = input.valueAsNumber;
+  if(!product || !Number.isSafeInteger(quantity) || quantity < 0){
+    showFlash('Enter a whole-number stock quantity of zero or more.', true);
+    renderTable();
+    return;
+  }
+  const size = input.dataset.stockSize;
+  if(input.dataset.stockField === 'real'){
+    product.sizes[size] = quantity;
+  }else{
+    if(!product.reservedSizes) product.reservedSizes = Object.fromEntries(SIZES.map(itemSize => [itemSize, 0]));
+    product.reservedSizes[size] = quantity;
+  }
+  renderTable();
+  await saveRow(TABLE_PRODUCTS, product);
+  showFlash(`${input.dataset.stockField === 'real' ? 'Real' : 'Reserved'} stock updated.`);
+}
+
+document.getElementById('view-stocks').addEventListener('change', event => {
+  const input = event.target.closest('[data-stock-product]');
+  if(input) handleStockQuantityChange(input);
+});
 
 function openModal(id){ document.getElementById(id).classList.add('open'); }
 function closeModal(id){ document.getElementById(id).classList.remove('open'); }
@@ -779,7 +925,7 @@ async function handleAdd(e){
   const sizes = readSizeGrid('add_size_grid');
   const prices = readPriceGrid('add_price_grid');
 
-  const newProduct = { id: nextId++, sku, name, prices, sizes };
+  const newProduct = { id: nextId++, sku, name, prices, sizes, reservedSizes:Object.fromEntries(SIZES.map(size => [size, 0])) };
   products.push(newProduct);
   e.target.reset();
   buildSizeGrid('add_size_grid');
@@ -836,11 +982,20 @@ function renderDashboardNews(){
   const container = document.getElementById('dashboardNews');
   if(!container) return;
   const sorted = [...news].sort((a,b) => b.createdAt.localeCompare(a.createdAt));
+  const now = new Date();
+  const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  const activeCampaigns = TIKTOK_CAMPAIGNS.flatMap(month => month.items)
+    .filter(campaign => campaign.start <= todayKey && todayKey <= campaign.end);
+  const activeCampaignNews = activeCampaigns.map(campaign => {
+    const start = new Date(`${campaign.start}T12:00:00`).toLocaleDateString(undefined, {month:'short', day:'numeric'});
+    const end = new Date(`${campaign.end}T12:00:00`).toLocaleDateString(undefined, {month:'short', day:'numeric', year:'numeric'});
+    return `<article style="padding:16px 20px;border-bottom:1px solid var(--line);background:#f0f9f8;"><div style="margin-bottom:6px;color:#357a79;font-size:.7rem;font-weight:700;letter-spacing:.05em;">ACTIVE TIKTOK CAMPAIGN</div><h4 style="font-family:'Space Grotesk',sans-serif;font-size:1rem;margin:0 0 5px;">${escapeHtml(campaign.name)}${campaign.mega ? ' · MEGA' : ''}</h4><p style="color:var(--ink-soft);font-size:.86rem;line-height:1.5;margin:0 0 8px;">${start} – ${end}</p><a href="tiktok-calendar.html" style="color:var(--denim);font-size:.8rem;font-weight:600;">View TikTok Calendar</a></article>`;
+  }).join('');
   if(!sorted.length){
-    container.innerHTML = '<p class="legend">No news published yet.</p>';
+    container.innerHTML = activeCampaignNews + '<p class="legend">No news published yet.</p>';
     return;
   }
-  container.innerHTML = sorted.map(item => {
+  container.innerHTML = activeCampaignNews + sorted.map(item => {
     const image = item.attachmentData && item.attachmentType && item.attachmentType.startsWith('image/')
       ? `<button type="button" onclick="viewDashboardAttachment(${item.id})" title="View ${escapeHtml(item.attachmentName || item.title)}" style="display:block;border:0;background:none;padding:0;margin-top:12px;cursor:pointer;max-width:100%;"><img src="${item.attachmentData}" alt="${escapeHtml(item.attachmentName || item.title)}" style="display:block;max-width:100%;max-height:280px;object-fit:contain;border-radius:7px;"></button>`
       : item.attachmentData ? `<button type="button" class="btn btn-primary btn-sm" onclick="viewDashboardAttachment(${item.id})" style="margin-top:10px;"><i class="fa-solid fa-paperclip"></i> View ${escapeHtml(item.attachmentName || 'attachment')}</button>` : '';
@@ -874,14 +1029,31 @@ function renderDashboard(){
   let low = 0, out = 0;
   products.forEach(p => {
     SIZES.forEach(sz => {
-      const qty = p.sizes[sz] || 0;
-      if(qty === 0) out++;
+      const qty = availableStock(p, sz);
+      if(qty <= 0) out++;
       else if(qty <= 5) low++;
     });
   });
   document.getElementById('stat-products').textContent = products.length;
   document.getElementById('stat-low').textContent = low;
   document.getElementById('stat-out').textContent = out;
+
+  const outOfStock = products.filter(p => SIZES.every(sz => availableStock(p, sz) <= 0));
+  const outOfStockContainer = document.getElementById('outOfStockProducts');
+  if(!outOfStockContainer) return;
+  if(!outOfStock.length){
+    outOfStockContainer.innerHTML = '<p class="legend">No products are currently out of stock.</p>';
+  }else{
+    outOfStockContainer.innerHTML = outOfStock.map(p => `
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border-bottom:1px solid var(--line);">
+        <div>
+          <div style="font-weight:700;">${escapeHtml(p.name)}</div>
+          <div class="sku" style="margin-top:2px;">${escapeHtml(p.sku)}</div>
+        </div>
+        <span class="badge badge-red">Out of stock</span>
+      </div>
+    `).join('');
+  }
 
   const open = jobOrders.filter(j => j.status !== 'done').slice(0, 5);
   const body = document.getElementById('dashJobBody');
