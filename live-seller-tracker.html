@@ -1,1 +1,708 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Stockline - Live Seller Tracker</title><style>body{margin:0;background:#F3F4F1;color:#1B2430;font-family:Arial,sans-serif}.page{max-width:900px;margin:0 auto;padding:48px 28px}.page a{color:#2F5D9A}</style></head><body><main class="page"><h1>Live Seller Tracker</h1><p>This workspace is ready for seller tracking records.</p><a href="dashboard.html">Back to Dashboard</a></main></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Live Seller Tracker — Stockline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+  :root{
+    --paper:#F3F4F1;--panel:#fff;--ink:#1B2430;--ink-soft:#5B6472;
+    --line:#E1E4E0;--denim:#2F5D9A;--denim-dark:#234876;--red:#B4423A;--red-bg:#FBE9E7;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:'Inter',sans-serif;min-height:100vh;}
+  h1,h2,h3{font-family:'Space Grotesk',sans-serif;margin:0;}
+  .app-shell{display:flex;min-height:100vh;}
+  .sidebar{width:216px;flex-shrink:0;background:var(--panel);border-right:1px solid var(--line);padding:18px 12px;overflow:hidden;transition:width .18s ease,padding .18s ease,opacity .12s ease;}
+  .sidebar.collapsed{width:0;padding-left:0;padding-right:0;opacity:0;border-right:0;}
+  .sidebar-brand{display:flex;align-items:center;gap:10px;padding:2px 8px 20px;}
+  .sidebar-brand span{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:1.02rem;white-space:nowrap;}
+  .login-mark{width:40px;height:40px;border-radius:8px;background:var(--denim);color:#fff;display:flex;align-items:center;justify-content:center;}
+  .nav-label{font-size:.68rem;font-weight:700;color:var(--ink-soft);letter-spacing:.04em;padding:0 10px;margin:14px 0 6px;}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:7px;font-size:.86rem;font-weight:600;color:var(--ink-soft);cursor:pointer;margin-bottom:2px;white-space:nowrap;border:0;background:none;width:100%;text-align:left;font-family:inherit;}
+  .nav-item i{width:16px;text-align:center;font-size:.85rem;}
+  .nav-item:hover{background:var(--paper);color:var(--ink);}
+  .nav-item.active{background:var(--denim);color:#fff;}
+  .main-area{flex:1;min-width:0;}
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;background:var(--panel);border-bottom:1px solid var(--line);}
+  .topbar-left{display:flex;align-items:center;gap:14px;}
+  .hamburger{background:none;border:0;cursor:pointer;width:34px;height:34px;border-radius:7px;display:flex;align-items:center;justify-content:center;color:var(--ink);font-size:1rem;}
+  .hamburger:hover{background:var(--paper);}
+  .topbar-user{display:flex;align-items:center;gap:12px;font-size:.85rem;color:var(--ink-soft);}
+  .topbar-user b{color:var(--ink);}
+  .save-indicator{font-size:.76rem;min-width:86px;}
+  .save-indicator.saving{color:var(--denim);}
+  .save-indicator.saved{color:#3F7D4F;}
+  .save-indicator.error{color:var(--red);}
+  .wrap{max-width:1180px;margin:0 auto;padding:28px;}
+  .page-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:20px;gap:16px;flex-wrap:wrap;}
+  .page-header h2{font-size:1.5rem;}
+  .page-header p{color:var(--ink-soft);font-size:.88rem;margin:6px 0 0;}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid transparent;border-radius:7px;font-family:inherit;font-weight:600;font-size:.86rem;padding:9px 13px;cursor:pointer;}
+  .btn-primary{background:var(--denim);color:#fff;}
+  .btn-primary:hover{background:var(--denim-dark);}
+  .btn-outline{background:#fff;border-color:var(--line);color:var(--ink);}
+  .btn-outline:hover{border-color:var(--denim);color:var(--denim);}
+  .btn-danger{background:var(--red-bg);color:var(--red);}
+  .btn-sm{padding:6px 9px;font-size:.78rem;}
+  .sheet-card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 20px 20px;}
+  .sheet-card + .sheet-card{margin-top:24px;}
+  .sheet-tools{display:flex;gap:8px;margin-bottom:14px;align-items:center;flex-wrap:wrap;}
+  .duration-calculator{display:flex;align-items:center;gap:8px;flex-wrap:wrap;width:100%;padding:10px;background:var(--paper);border-radius:7px;font-size:.82rem;}
+  .duration-calculator label{display:flex;align-items:center;gap:5px;}
+  .duration-calculator input{width:72px;padding:6px;border:1px solid var(--line);border-radius:5px;font:inherit;}
+  .duration-calculator output{font-weight:700;color:var(--denim);}
+  .duration-selection{color:var(--ink-soft);}
+  .sheet-wrap{overflow-x:auto;}
+  .sheet{border-collapse:collapse;width:100%;min-width:760px;table-layout:fixed;background:#fff;font-family:Arial,sans-serif;}
+  .sheet th,.sheet td{border:1px solid #222;height:34px;padding:0;font-size:13px;}
+  .sheet td input{width:100%;height:100%;border:0;background:transparent;font:inherit;padding:4px 6px;text-align:center;color:#111;}
+  .sheet td input:focus{outline:2px solid var(--denim);outline-offset:-2px;background:#fffef5;}
+  .sheet .title-cell{height:31px;text-align:center;font-weight:700;font-size:14px;}
+  .sheet .seller-cell{height:31px;text-align:center;}
+  .sheet .info-label{text-align:center;text-transform:uppercase;}
+  .sheet .info-value input{text-transform:uppercase;}
+  .sheet .section-label{text-align:center;font-weight:700;text-transform:uppercase;}
+  .sheet .group-heading{height:28px;text-align:center;text-transform:uppercase;background:#dceef2;font-weight:400;}
+  .sheet .head-date{background:#b5cce8;}
+  .sheet .head-in{background:#dbe9c9;}
+  .sheet .head-out{background:#e7c4c8;}
+  .sheet .head-duration{background:#f3d1b5;}
+  .sheet .head-sales{background:#d9dcee;}
+  .sheet .column-heading{height:29px;text-align:center;text-transform:uppercase;font-weight:400;}
+  .sheet .sunday-row td{height:25px;background:#dceef2;text-align:center;font-weight:700;letter-spacing:.08em;}
+  .sheet .sunday-row input{font-weight:700;letter-spacing:.08em;text-transform:uppercase;}
+  .sheet .status-divider td{background:#f3d1b5;}
+  .sheet .absent-row td{background:#dceef2;}
+  .sheet .half-day-label{background:#dceef2;}
+  .sheet .half-day-label{position:relative;text-align:center;font-weight:700;}
+  .sheet .half-day-label .drag-handle{position:absolute;top:2px;left:2px;opacity:.2;}
+  .sheet .half-day-label .drag-handle:hover{opacity:1;}
+  .sheet [data-half-day-period].half-day-drop-target{cursor:copy;}
+  .sheet [data-half-day-period].half-day-drop-active{outline:3px solid var(--denim);outline-offset:-3px;}
+  .sheet tr.drag-over-before td{box-shadow:inset 0 3px 0 var(--denim);}
+  .sheet tr.drag-over-after td{box-shadow:inset 0 -3px 0 var(--denim);}
+  .divider-content{display:flex;align-items:center;justify-content:center;gap:8px;}
+  .drag-handle{border:0;background:transparent;color:var(--ink-soft);cursor:grab;padding:3px 8px;touch-action:none;}
+  .drag-handle:active{cursor:grabbing;}
+  .divider-content input{flex:1;}
+  .sheet .action-cell{width:38px;border-left:0;border-right:0;}
+  .row-remove{border:0;background:transparent;color:var(--red);cursor:pointer;width:100%;height:100%;opacity:.65;}
+  .row-remove:hover{opacity:1;background:var(--red-bg);}
+  .flash{display:none;margin:0 0 14px;padding:10px 13px;border-radius:7px;font-size:.84rem;}
+  .flash.error{display:block;background:var(--red-bg);color:var(--red);}
+  .flash.success{display:block;background:#E7F2E9;color:#3F7D4F;}
+  .scroll-hint{display:none;font-size:.74rem;color:var(--ink-soft);margin:8px 0 0;}
+  @media(max-width:900px){
+    .sidebar{position:fixed;top:0;bottom:0;left:0;z-index:40;width:240px;box-shadow:2px 0 16px rgba(27,36,48,.18);}
+    .sidebar.collapsed{width:0;box-shadow:none;}
+    .wrap{padding:20px 16px;}.topbar{padding:12px 16px;}
+  }
+  @media(max-width:720px){
+    .page-header{flex-direction:column;align-items:stretch;gap:12px;}
+    .page-header h2{font-size:1.25rem;}
+    .page-header .btn{width:100%;}
+    .sheet-card{padding:12px;}
+    .sheet th,.sheet td{height:38px;}
+    .sheet td input{font-size:16px;}
+    .scroll-hint{display:block;}
+  }
+  @media(max-width:520px){.user-label,.logout-text{display:none;}.topbar-user{gap:8px;}.wrap{padding:16px 12px;}}
+  @media print{
+    body{background:#fff;}
+    .sidebar,.topbar,.page-header,.sheet-tools,.scroll-hint,.action-cell,.flash{display:none!important;}
+    .app-shell{display:block;}.wrap{max-width:none;padding:0;}
+    .sheet-card{border:0;padding:0;break-inside:avoid;page-break-inside:avoid;}
+    .sheet-card + .sheet-card{margin-top:20px;}
+    .sheet-wrap{overflow:visible;}
+    .sheet{min-width:0;}
+    .sheet .half-day-drop-active,.sheet tr.drag-over-before td,.sheet tr.drag-over-after td{outline:none!important;box-shadow:none!important;}
+    .sheet th,.sheet .group-heading,.sheet .head-date,.sheet .head-in,.sheet .head-out,.sheet .head-duration,.sheet .head-sales,.sheet .sunday-row td,.sheet .absent-row td,.sheet .half-day-label{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    @page{size:landscape;margin:12mm;}
+  }
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <nav class="sidebar" id="sidebar" aria-label="Main menu">
+    <div class="sidebar-brand"><div class="login-mark"><i class="fa-solid fa-box"></i></div><span>Admin Dashboard</span></div>
+    <p class="nav-label">Menu</p>
+    <button class="nav-item" onclick="window.location.href='dashboard.html'"><i class="fa-solid fa-gauge-high"></i> Dashboard</button>
+    <button class="nav-item" onclick="window.location.href='stocks.html'"><i class="fa-solid fa-ruler"></i> Stocks</button>
+    <button class="nav-item" onclick="window.location.href='joborder.html'"><i class="fa-solid fa-clipboard-list"></i> Job Order Tracker</button>
+    <button class="nav-item" onclick="window.location.href='orders.html'"><i class="fa-solid fa-boxes-stacked"></i> Orders</button>
+    <button class="nav-item" onclick="window.location.href='news.html'"><i class="fa-solid fa-newspaper"></i> News</button>
+    <button class="nav-item" onclick="window.location.href='operation-records.html'"><i class="fa-solid fa-clipboard-check"></i> Operation Records</button>
+    <button class="nav-item active" aria-current="page"><i class="fa-solid fa-chart-line"></i> Live Seller Tracker</button>
+    <button class="nav-item" onclick="window.location.href='tiktok-calendar.html'"><i class="fa-brands fa-tiktok"></i> TikTok Calendar</button>
+    <button class="nav-item" onclick="window.location.href='sewer-record.html'"><i class="fa-solid fa-user-gear"></i> Sewer Record</button>
+  </nav>
+  <main class="main-area">
+    <header class="topbar">
+      <div class="topbar-left"><button class="hamburger" onclick="toggleSidebar()" aria-label="Toggle menu"><i class="fa-solid fa-bars"></i></button></div>
+      <div class="topbar-user"><span class="save-indicator" id="saveIndicator" aria-live="polite"></span><span class="user-label">Signed in as</span> <b id="whoami">admin</b><button class="btn btn-outline btn-sm" onclick="handleLogout()" aria-label="Log out"><i class="fa-solid fa-arrow-right-from-bracket"></i> <span class="logout-text">Log out</span></button></div>
+    </header>
+    <div class="wrap">
+      <div class="page-header">
+        <div><h2>Live Seller Tracker</h2><p>Record daily arrival times, hours, and sales.</p></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-primary" id="addTableButton" type="button"><i class="fa-solid fa-plus"></i> Add Another Table</button>
+          <button class="btn btn-outline" type="button" onclick="window.print()"><i class="fa-solid fa-print"></i> Print</button>
+        </div>
+      </div>
+      <div class="flash" id="flash" role="status" aria-live="polite"></div>
+      <div id="tables">
+      <section class="sheet-card" data-record-id="1" aria-label="Editable daily time record">
+        <div class="sheet-tools">
+          <button class="btn btn-primary btn-sm btn-add-row" type="button"><i class="fa-solid fa-plus"></i> Add Row</button>
+          <button class="btn btn-outline btn-sm btn-add-divider" type="button"><i class="fa-solid fa-minus"></i> Add Sunday Divider</button>
+          <button class="btn btn-primary btn-sm btn-add-absent" type="button"><i class="fa-solid fa-user-xmark"></i> Add Absent Divider</button>
+          <button class="btn btn-outline btn-sm btn-add-half-day" type="button"><i class="fa-solid fa-clock"></i> Add Half Day</button>
+          <button class="btn btn-danger btn-sm btn-remove-table" type="button"><i class="fa-solid fa-trash"></i> Remove Table</button>
+          <div class="duration-calculator" aria-label="Duration calculator">
+            <strong>Duration calculator:</strong>
+            <label>Hours <input type="number" min="0" step="1" data-duration-hours aria-label="Hours to add"></label>
+            <label>Minutes <input type="number" min="0" max="59" step="1" data-duration-minutes aria-label="Minutes to add"></label>
+            <label>Seconds <input type="number" min="0" max="59" step="1" data-duration-seconds aria-label="Seconds to add"></label>
+            <button class="btn btn-outline btn-sm btn-add-duration" type="button">Add time</button>
+            <span>Total: <output data-duration-total aria-live="polite">0h 00m 00s</output></span>
+            <button class="btn btn-primary btn-sm btn-apply-duration" type="button">Add total to row</button>
+          </div>
+        </div>
+        <div class="sheet-wrap">
+          <table class="sheet">
+            <colgroup>
+              <col style="width:12%"><col style="width:12%"><col style="width:12%"><col style="width:12%">
+              <col style="width:12%"><col style="width:20%"><col style="width:18%"><col class="action-col" style="width:38px">
+            </colgroup>
+            <thead>
+              <tr><th colspan="8" class="title-cell">DAILY TIME RECORD</th></tr>
+              <tr><td colspan="8" class="seller-cell"><input data-record-field="sellerName" type="text" aria-label="Seller name" placeholder="SELLER NAME"></td></tr>
+              <tr>
+                <td colspan="2" class="info-label">Official hours of arrival</td>
+                <td colspan="3" class="info-value"><input data-record-field="officialHours" type="text" aria-label="Official hours of arrival" value="9:00 AM - 6:00 PM"></td>
+                <td class="info-label">Regular days</td>
+                <td colspan="2" class="info-value"><input data-record-field="regularDays" type="text" aria-label="Regular days" value="Monday - Saturday"></td>
+              </tr>
+              <tr><td colspan="8" class="section-label">Submission: <input data-record-field="submissionSchedule" type="text" aria-label="Submission schedule" value="Every Thursday" style="width:55%;height:28px;border:0;background:transparent;text-align:center;text-transform:uppercase;font:inherit;"></td></tr>
+              <tr>
+                <th rowspan="2" class="column-heading head-date">Date</th>
+                <th colspan="2" class="group-heading" data-half-day-period="morning">Morning</th>
+                <th colspan="2" class="group-heading" data-half-day-period="afternoon">Afternoon</th>
+                <th rowspan="2" class="column-heading head-duration">Duration</th>
+                <th rowspan="2" class="column-heading head-sales">Sales</th>
+                <th rowspan="2" class="action-cell"></th>
+              </tr>
+              <tr>
+                <th class="column-heading head-in" data-half-day-period="morning">Live in</th>
+                <th class="column-heading head-out" data-half-day-period="morning">Live out</th>
+                <th class="column-heading head-in" data-half-day-period="afternoon">Live in</th>
+                <th class="column-heading head-out" data-half-day-period="afternoon">Live out</th>
+              </tr>
+            </thead>
+            <tbody data-record-rows></tbody>
+            <tfoot>
+              <tr><td colspan="8" class="seller-cell"><input data-record-field="approvedBy" type="text" aria-label="Approved by" placeholder="APPROVED BY"></td></tr>
+              <tr><td colspan="8" class="seller-cell"><input data-record-field="approverRole" type="text" aria-label="Approver role" value="ADMIN"></td></tr>
+            </tfoot>
+          </table>
+        </div>
+        <p class="scroll-hint"><i class="fa-solid fa-arrows-left-right"></i> Swipe sideways to see all columns</p>
+      </section>
+      </div>
+    </div>
+  </main>
+</div>
+<script src="database.js"></script>
+<script>
+const TABLE_SELLER_TRACKER = 'sellertracker';
+const sellerTrackerTemplate = document.querySelector('.sheet-card[data-record-id="1"]').cloneNode(true);
+let records = [];
+let nextRecordId = 2;
+let currentTableId = 1;
+const rowIds = new Map();
+const saveTimers = new Map();
+const selectedRows = new Map();
+const durationTotals = new Map();
+let draggedHalfDay = null;
+let saveQueue = Promise.resolve();
+
+function setSaveIndicator(state){
+  const indicator = document.getElementById('saveIndicator');
+  indicator.className = 'save-indicator ' + state;
+  indicator.textContent = state === 'saving' ? 'Saving…' : state === 'saved' ? 'Saved' : state === 'error' ? 'Save failed' : '';
+}
+
+function showFlash(message, isError){
+  const flash = document.getElementById('flash');
+  flash.className = 'flash ' + (isError ? 'error' : 'success');
+  flash.textContent = message;
+}
+
+function escapeHtml(value){
+  return String(value ?? '').replace(/[&<>'"]/g, character => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[character]));
+}
+
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('collapsed');
+}
+
+function handleLogout(){
+  sessionStorage.removeItem('stockline-authenticated');
+  window.location.href = 'dashboard.html';
+}
+
+function createRecord(id){
+  return { id, order: id - 1, sellerName: '', officialHours: '9:00 AM - 6:00 PM', regularDays: 'Monday - Saturday', submissionSchedule: 'Every Thursday', approvedBy: '', approverRole: 'ADMIN', rows: [] };
+}
+
+function makeEntry(record){
+  const rowId = rowIds.get(record.id) || 1;
+  rowIds.set(record.id, rowId + 1);
+  return { id: rowId, type: 'entry', date: '', morningIn: '', morningOut: '', afternoonIn: '', afternoonOut: '', duration: '', sales: '' };
+}
+
+function addDefaultRows(record){
+  record.rows = [makeEntry(record), makeEntry(record), makeEntry(record), makeEntry(record), { id: rowIds.get(record.id), type: 'divider', label: '**** SUNDAY ****' }];
+  rowIds.set(record.id, rowIds.get(record.id) + 1);
+  record.rows.push(makeEntry(record), makeEntry(record), makeEntry(record), makeEntry(record));
+}
+
+function getSheet(recordId){
+  return document.querySelector(`.sheet-card[data-record-id="${recordId}"]`);
+}
+
+function renderRows(record){
+  const body = getSheet(record.id).querySelector('[data-record-rows]');
+  body.innerHTML = record.rows.map(row => {
+    if(row.type === 'divider'){
+      const isSunday = row.label.toLowerCase().includes('sunday');
+      const isAbsent = row.label.toLowerCase().includes('absent');
+      const dividerClass = isSunday ? 'sunday-row' : isAbsent ? 'sunday-row absent-row' : 'sunday-row status-divider';
+      const halfDayHandle = row.label.toLowerCase().includes('half day')
+        ? `<button class="drag-handle" type="button" draggable="true" data-drag-half-day="${row.id}" aria-label="Drag Half Day divider" title="Drag to move"><i class="fa-solid fa-grip-vertical"></i></button>`
+        : '';
+      return `<tr class="${dividerClass}" data-row-id="${row.id}"><td colspan="7"><div class="divider-content">${halfDayHandle}<input type="text" data-field="label" aria-label="Section divider label" value="${escapeHtml(row.label)}"></div></td><td class="action-cell"><button class="row-remove" type="button" data-remove-row="${row.id}" aria-label="Remove divider"><i class="fa-solid fa-xmark"></i></button></td></tr>`;
+    }
+    if(row.type === 'halfDay'){
+      const halfDayPeriod = row.halfDayPeriod === 'morning' ? 'morning' : 'afternoon';
+      const morningCells = halfDayPeriod === 'morning'
+        ? `<td colspan="2" class="half-day-label"><button class="drag-handle" type="button" draggable="true" data-drag-half-day="${row.id}" aria-label="Drag Half Day row" title="Drag to Morning or Afternoon"><i class="fa-solid fa-grip-vertical"></i></button>${escapeHtml(row.label || '**** HALF DAY ****')}</td>`
+        : `<td><input type="time" data-field="morningIn" aria-label="Morning live in"></td>
+           <td><input type="time" data-field="morningOut" aria-label="Morning live out"></td>`;
+      const afternoonCells = halfDayPeriod === 'afternoon'
+        ? `<td colspan="2" class="half-day-label"><button class="drag-handle" type="button" draggable="true" data-drag-half-day="${row.id}" aria-label="Drag Half Day row" title="Drag to Morning or Afternoon"><i class="fa-solid fa-grip-vertical"></i></button>${escapeHtml(row.label || '**** HALF DAY ****')}</td>`
+        : `<td><input type="time" data-field="afternoonIn" aria-label="Afternoon live in"></td>
+           <td><input type="time" data-field="afternoonOut" aria-label="Afternoon live out"></td>`;
+      return `<tr data-row-id="${row.id}">
+        <td><input type="date" data-field="date" aria-label="Date"></td>
+        ${morningCells}
+        ${afternoonCells}
+        <td><input type="text" data-field="duration" aria-label="Duration" placeholder="e.g. 8 hrs"></td>
+        <td><input type="number" min="0" step="0.01" data-field="sales" aria-label="Sales"></td>
+        <td class="action-cell"><button class="row-remove" type="button" data-remove-row="${row.id}" aria-label="Remove row"><i class="fa-solid fa-xmark"></i></button></td>
+      </tr>`;
+    }
+    return `<tr data-row-id="${row.id}">
+      <td><input type="date" data-field="date" aria-label="Date"></td>
+      <td><input type="time" data-field="morningIn" aria-label="Morning live in"></td>
+      <td><input type="time" data-field="morningOut" aria-label="Morning live out"></td>
+      <td><input type="time" data-field="afternoonIn" aria-label="Afternoon live in"></td>
+      <td><input type="time" data-field="afternoonOut" aria-label="Afternoon live out"></td>
+      <td><input type="text" data-field="duration" aria-label="Duration" placeholder="e.g. 8 hrs"></td>
+      <td><input type="number" min="0" step="0.01" data-field="sales" aria-label="Sales"></td>
+      <td class="action-cell"><button class="row-remove" type="button" data-remove-row="${row.id}" aria-label="Remove row"><i class="fa-solid fa-xmark"></i></button></td>
+    </tr>`;
+  }).join('');
+
+  record.rows.forEach(row => {
+    if(row.type !== 'entry' && row.type !== 'halfDay') return;
+    const tr = body.querySelector(`[data-row-id="${row.id}"]`);
+    Object.entries(row).forEach(([field, value]) => {
+      const input = tr.querySelector(`[data-field="${field}"]`);
+      if(input) input.value = value;
+    });
+  });
+}
+
+function collectRecord(record){
+  const sheet = getSheet(record.id);
+  sheet.querySelectorAll('[data-record-field]').forEach(input => {
+    record[input.dataset.recordField] = input.value;
+  });
+  sheet.querySelectorAll('[data-record-rows] tr[data-row-id]').forEach(tr => {
+    const row = record.rows.find(item => item.id === Number(tr.dataset.rowId));
+    if(!row) return;
+    tr.querySelectorAll('[data-field]').forEach(input => { row[input.dataset.field] = input.value; });
+  });
+}
+
+function queueSave(record){
+  collectRecord(record);
+  clearTimeout(saveTimers.get(record.id));
+  saveTimers.set(record.id, setTimeout(() => {
+    const snapshot = JSON.parse(JSON.stringify(record));
+    saveQueue = saveQueue.then(() => saveRow(TABLE_SELLER_TRACKER, snapshot));
+  }, 300));
+}
+
+function addEntryRow(recordId){
+  const record = records.find(item => item.id === recordId);
+  collectRecord(record);
+  record.rows.push(makeEntry(record));
+  renderRows(record);
+  queueSave(record);
+}
+
+function addDivider(recordId, label){
+  const record = records.find(item => item.id === recordId);
+  collectRecord(record);
+  const dividerId = rowIds.get(record.id);
+  rowIds.set(record.id, dividerId + 1);
+  const selectedRowId = selectedRows.get(record.id);
+  const selectedIndex = record.rows.findIndex(row => row.id === selectedRowId);
+  const newDivider = { id: dividerId, type: 'divider', label };
+  if(selectedIndex === -1) record.rows.push(newDivider);
+  else record.rows.splice(selectedIndex + 1, 0, newDivider);
+  renderRows(record);
+  queueSave(record);
+}
+
+function addHalfDayRow(recordId){
+  const record = records.find(item => item.id === recordId);
+  collectRecord(record);
+  const halfDayRow = makeEntry(record);
+  halfDayRow.type = 'halfDay';
+  halfDayRow.label = '**** HALF DAY ****';
+  const selectedIndex = record.rows.findIndex(row => row.id === selectedRows.get(record.id));
+  if(selectedIndex === -1){
+    const sundayIndex = record.rows.findIndex(row => row.type === 'divider' && row.label.toLowerCase().includes('sunday'));
+    if(sundayIndex === -1) record.rows.push(halfDayRow);
+    else record.rows.splice(sundayIndex, 0, halfDayRow);
+  }
+  else record.rows.splice(selectedIndex + 1, 0, halfDayRow);
+  selectedRows.set(record.id, halfDayRow.id);
+  renderRows(record);
+  queueSave(record);
+  getSheet(recordId).querySelector(`[data-row-id="${halfDayRow.id}"]`).scrollIntoView({block:'nearest'});
+}
+
+function formatDuration(seconds){
+  const hours = Math.floor(seconds / 3600);
+  const remainingMinutes = Math.floor(seconds / 60) % 60;
+  seconds %= 60;
+  return `${hours}h ${String(remainingMinutes).padStart(2, '0')}m ${String(seconds).padStart(2, '0')}s`;
+}
+
+function parseDuration(value){
+  const text = value.trim();
+  if(!text) return 0;
+  const clock = text.match(/^(\d+):([0-5]\d)(?::([0-5]\d))?$/);
+  if(clock) return Number(clock[1]) * 3600 + Number(clock[2]) * 60 + Number(clock[3] || 0);
+  const decimalHours = text.match(/^(\d+(?:\.\d+)?)\s*(?:h|hr|hrs|hour|hours)?\.?$/i);
+  if(decimalHours) return Math.round(Number(decimalHours[1]) * 3600);
+  const units = { h: 3600, hr: 3600, hrs: 3600, hour: 3600, hours: 3600, m: 60, min: 60, mins: 60, minute: 60, minutes: 60, s: 1, sec: 1, secs: 1, second: 1, seconds: 1 };
+  const pattern = /(\d+(?:\.\d+)?)\s*(hours?|hrs?|h|minutes?|mins?|m|seconds?|secs?|s)\.?/gi;
+  let total = 0;
+  let cursor = 0;
+  let found = false;
+  let match;
+  while((match = pattern.exec(text))){
+    const separator = text.slice(cursor, match.index);
+    if(!/^[\s,]*(?:and[\s,]*)?$/i.test(separator)) return null;
+    total += Number(match[1]) * units[match[2].toLowerCase()];
+    cursor = pattern.lastIndex;
+    found = true;
+  }
+  return found && /^[\s,]*(?:and[\s,]*)?$/i.test(text.slice(cursor)) ? Math.round(total) : null;
+}
+
+function updateDurationCalculator(recordId){
+  const sheet = getSheet(recordId);
+  if(!sheet) return;
+  sheet.querySelector('[data-duration-total]').textContent = formatDuration(durationTotals.get(recordId) || 0);
+}
+
+function addDurationToCalculator(recordId, sheet){
+  const hoursInput = sheet.querySelector('[data-duration-hours]');
+  const minutesInput = sheet.querySelector('[data-duration-minutes]');
+  const secondsInput = sheet.querySelector('[data-duration-seconds]');
+  const hours = hoursInput.value === '' ? 0 : Number(hoursInput.value);
+  const minutes = minutesInput.value === '' ? 0 : Number(minutesInput.value);
+  const seconds = secondsInput.value === '' ? 0 : Number(secondsInput.value);
+  if(!Number.isSafeInteger(hours) || hours < 0 || !Number.isSafeInteger(minutes) || minutes < 0 || minutes > 59 || !Number.isSafeInteger(seconds) || seconds < 0 || seconds > 59 || hours * 3600 + minutes * 60 + seconds <= 0){
+    showFlash('Enter a positive duration using whole hours and 0–59 minutes and seconds.', true);
+    return;
+  }
+  const total = (durationTotals.get(recordId) || 0) + hours * 3600 + minutes * 60 + seconds;
+  if(!Number.isSafeInteger(total)){
+    showFlash('The accumulated duration is too large.', true);
+    return;
+  }
+  durationTotals.set(recordId, total);
+  hoursInput.value = '';
+  minutesInput.value = '';
+  secondsInput.value = '';
+  updateDurationCalculator(recordId);
+}
+
+function applyDurationToSelectedRow(record){
+  const sheet = getSheet(record.id);
+  const total = durationTotals.get(record.id) || 0;
+  const rowId = selectedRows.get(record.id);
+  const row = record.rows.find(item => item.id === rowId && (item.type === 'entry' || item.type === 'halfDay'));
+  if(total <= 0){
+    showFlash('Add a duration to the calculator first.', true);
+    return;
+  }
+  if(!row){
+    showFlash('Select an entry row before adding the duration total.', true);
+    return;
+  }
+  const durationInput = sheet.querySelector(`[data-row-id="${row.id}"] [data-field="duration"]`);
+  const existing = parseDuration(durationInput.value);
+  if(existing === null){
+    showFlash('The selected row has an unrecognized duration. Use a value like 8 hrs or 1:30 before adding time.', true);
+    return;
+  }
+  const combined = existing + total;
+  if(!Number.isSafeInteger(combined)){
+    showFlash('The row duration is too large.', true);
+    return;
+  }
+  durationInput.value = formatDuration(combined);
+  durationTotals.set(record.id, 0);
+  updateDurationCalculator(record.id);
+  queueSave(record);
+  showFlash(`Added ${formatDuration(total)} to the selected row.`, false);
+}
+
+document.getElementById('tables').addEventListener('input', event => {
+  const sheet = event.target.closest('.sheet-card');
+  if(!sheet || event.target.matches('[data-duration-hours], [data-duration-minutes], [data-duration-seconds]')) return;
+  queueSave(records.find(item => item.id === Number(sheet.dataset.recordId)));
+});
+document.getElementById('tables').addEventListener('change', event => {
+  const sheet = event.target.closest('.sheet-card');
+  if(!sheet || event.target.matches('[data-duration-hours], [data-duration-minutes], [data-duration-seconds]')) return;
+  queueSave(records.find(item => item.id === Number(sheet.dataset.recordId)));
+});
+document.getElementById('tables').addEventListener('focusin', event => {
+  const sheet = event.target.closest('.sheet-card');
+  if(sheet) currentTableId = Number(sheet.dataset.recordId);
+  const row = event.target.closest('[data-row-id]');
+  if(!row || !sheet) return;
+  const recordId = Number(sheet.dataset.recordId);
+  const rowId = Number(row.dataset.rowId);
+  const record = records.find(item => item.id === recordId);
+  if(record && record.rows.some(item => item.id === rowId && (item.type === 'entry' || item.type === 'halfDay'))){
+    selectedRows.set(recordId, rowId);
+  }
+});
+document.getElementById('tables').addEventListener('dragstart', event => {
+  const handle = event.target.closest('[data-drag-half-day]');
+  const sheet = event.target.closest('.sheet-card');
+  if(!handle || !sheet) return;
+  draggedHalfDay = { recordId: Number(sheet.dataset.recordId), rowId: Number(handle.dataset.dragHalfDay), droppedOnPeriod: null };
+  event.dataTransfer.effectAllowed = 'move';
+  event.dataTransfer.setData('text/plain', String(draggedHalfDay.rowId));
+  sheet.querySelectorAll('[data-half-day-period]').forEach(target => target.classList.add('half-day-drop-target'));
+  requestAnimationFrame(() => handle.closest('tr').classList.add('dragging'));
+});
+document.getElementById('tables').addEventListener('dragover', event => {
+  if(!draggedHalfDay) return;
+  const sheet = event.target.closest('.sheet-card');
+  if(!sheet || Number(sheet.dataset.recordId) !== draggedHalfDay.recordId) return;
+  const periodTarget = event.target.closest('[data-half-day-period]');
+  const targetCell = event.target.closest('td');
+  const target = event.target.closest('tr[data-row-id]');
+  event.preventDefault();
+  event.dataTransfer.dropEffect = 'move';
+  sheet.querySelectorAll('.half-day-drop-active').forEach(item => item.classList.remove('half-day-drop-active'));
+  const period = periodTarget?.dataset.halfDayPeriod
+    || (targetCell?.cellIndex >= 1 && targetCell.cellIndex <= 2 ? 'morning' : targetCell?.cellIndex >= 3 && targetCell.cellIndex <= 4 ? 'afternoon' : null);
+  if(period){
+    draggedHalfDay.droppedOnPeriod = period;
+    sheet.querySelectorAll(`[data-half-day-period="${period}"]`).forEach(target => target.classList.add('half-day-drop-active'));
+    return;
+  }
+  draggedHalfDay.droppedOnPeriod = null;
+  if(!target) return;
+  sheet.querySelectorAll('.drag-over-before,.drag-over-after').forEach(row => row.classList.remove('drag-over-before','drag-over-after'));
+  target.classList.add(event.clientY < target.getBoundingClientRect().top + target.getBoundingClientRect().height / 2 ? 'drag-over-before' : 'drag-over-after');
+});
+document.getElementById('tables').addEventListener('drop', event => {
+  if(!draggedHalfDay) return;
+  const sheet = event.target.closest('.sheet-card');
+  if(!sheet || Number(sheet.dataset.recordId) !== draggedHalfDay.recordId) return;
+  event.preventDefault();
+  const record = records.find(item => item.id === draggedHalfDay.recordId);
+  const draggedRow = record.rows.find(row => row.id === draggedHalfDay.rowId && (row.type === 'halfDay' || (row.type === 'divider' && row.label.toLowerCase().includes('half day'))));
+  if(draggedHalfDay.droppedOnPeriod && draggedRow?.type === 'halfDay'){
+    draggedRow.halfDayPeriod = draggedHalfDay.droppedOnPeriod;
+    sheet.querySelectorAll('.half-day-drop-target,.half-day-drop-active').forEach(item => item.classList.remove('half-day-drop-target','half-day-drop-active'));
+    renderRows(record);
+    queueSave(record);
+    return;
+  }
+  const target = event.target.closest('tr[data-row-id]');
+  if(!target) return;
+  const fromIndex = record.rows.findIndex(row => row.id === draggedHalfDay.rowId && (row.type === 'halfDay' || (row.type === 'divider' && row.label.toLowerCase().includes('half day'))));
+  const targetIndex = record.rows.findIndex(row => row.id === Number(target.dataset.rowId));
+  if(fromIndex === -1 || targetIndex === -1) return;
+  const afterTarget = event.clientY >= target.getBoundingClientRect().top + target.getBoundingClientRect().height / 2;
+  const [halfDay] = record.rows.splice(fromIndex, 1);
+  let insertIndex = targetIndex + (afterTarget ? 1 : 0);
+  if(fromIndex < insertIndex) insertIndex--;
+  record.rows.splice(insertIndex, 0, halfDay);
+  renderRows(record);
+  queueSave(record);
+});
+document.getElementById('tables').addEventListener('dragend', event => {
+  const sheet = event.target.closest('.sheet-card');
+  if(sheet) sheet.querySelectorAll('.dragging,.drag-over-before,.drag-over-after,.half-day-drop-target,.half-day-drop-active').forEach(row => row.classList.remove('dragging','drag-over-before','drag-over-after','half-day-drop-target','half-day-drop-active'));
+  draggedHalfDay = null;
+});
+document.getElementById('tables').addEventListener('click', event => {
+  const sheet = event.target.closest('.sheet-card');
+  if(!sheet) return;
+  currentTableId = Number(sheet.dataset.recordId);
+  const record = records.find(item => item.id === Number(sheet.dataset.recordId));
+  if(!record) return;
+  const row = event.target.closest('tr[data-row-id]');
+  if(row){
+    const rowId = Number(row.dataset.rowId);
+    if(record.rows.some(item => item.id === rowId && (item.type === 'entry' || item.type === 'halfDay'))){
+      selectedRows.set(record.id, rowId);
+    }
+  }
+  if(event.target.closest('.btn-add-row')) addEntryRow(record.id);
+  if(event.target.closest('.btn-add-divider')) addDivider(record.id, '**** SUNDAY ****');
+  if(event.target.closest('.btn-add-absent')) addDivider(record.id, '**** ABSENT ****');
+  if(event.target.closest('.btn-add-half-day')) addHalfDayRow(record.id);
+  if(event.target.closest('.btn-remove-table')) removeTable(record.id);
+  if(event.target.closest('.btn-add-duration')) addDurationToCalculator(record.id, sheet);
+  if(event.target.closest('.btn-apply-duration')) applyDurationToSelectedRow(record);
+  const button = event.target.closest('[data-remove-row]');
+  if(button){
+    const rowId = Number(button.dataset.removeRow);
+    record.rows = record.rows.filter(row => row.id !== rowId);
+    if(selectedRows.get(record.id) === rowId) selectedRows.delete(record.id);
+    renderRows(record);
+    queueSave(record);
+  }
+});
+
+function addTable(){
+  const existingIds = [
+    ...records.map(record => Number(record.id)),
+    ...[...document.querySelectorAll('.sheet-card')].map(sheet => Number(sheet.dataset.recordId)),
+  ].filter(Number.isFinite);
+  const id = Math.max(nextRecordId, ...existingIds.map(existingId => existingId + 1));
+  nextRecordId = id + 1;
+  const sheet = sellerTrackerTemplate.cloneNode(true);
+  sheet.dataset.recordId = id;
+  sheet.querySelector('[data-record-field="sellerName"]').value = '';
+  sheet.querySelector('[data-record-field="officialHours"]').value = '9:00 AM - 6:00 PM';
+  sheet.querySelector('[data-record-field="regularDays"]').value = 'Monday - Saturday';
+  sheet.querySelector('[data-record-field="submissionSchedule"]').value = 'Every Thursday';
+  sheet.querySelector('[data-record-field="approvedBy"]').value = '';
+  sheet.querySelector('[data-record-field="approverRole"]').value = 'ADMIN';
+  sheet.querySelector('[data-record-rows]').innerHTML = '';
+  document.getElementById('tables').appendChild(sheet);
+  const record = createRecord(id);
+  addDefaultRows(record);
+  records.push(record);
+  records.forEach((item, index) => {
+    item.order = index;
+    queueSave(item);
+  });
+  currentTableId = id;
+  renderRows(record);
+  showFlash(`Added table ${id}.`, false);
+  sheet.querySelector('[data-record-field="sellerName"]').focus({preventScroll:true});
+}
+
+async function removeTable(recordId){
+  if(records.length <= 1){
+    showFlash('Keep at least one table. Add another table before removing this one.', true);
+    return;
+  }
+  const record = records.find(item => item.id === recordId);
+  if(!record || !confirm(`Remove the table${record.sellerName ? ` for ${record.sellerName}` : ''}? This cannot be undone.`)) return;
+  clearTimeout(saveTimers.get(recordId));
+  records = records.filter(item => item.id !== recordId);
+  selectedRows.delete(recordId);
+  getSheet(recordId).remove();
+  const deletionMarker = { id: recordId, deleted: true };
+  saveQueue = saveQueue.then(() => saveRow(TABLE_SELLER_TRACKER, deletionMarker));
+}
+
+async function initializeTracker(){
+  document.getElementById('whoami').textContent = sessionStorage.getItem('stockline-authenticated') === 'true' ? 'admin' : 'guest';
+  try{
+    const loaded = await loadTable(TABLE_SELLER_TRACKER) || [];
+    const byId = new Map(loaded.map(item => [Number(item.id), item]));
+    const recordIds = [...new Set([1, 2, ...byId.keys()])]
+      .filter(id => !byId.get(id)?.deleted)
+      .sort((a, b) => {
+        const orderA = byId.get(a)?.order;
+        const orderB = byId.get(b)?.order;
+        if(Number.isFinite(orderA) && Number.isFinite(orderB)) return orderA - orderB || a - b;
+        if(Number.isFinite(orderA)) return -1;
+        if(Number.isFinite(orderB)) return 1;
+        return a - b;
+      });
+    recordIds.forEach(id => {
+      if(!getSheet(id)){
+        const sheet = sellerTrackerTemplate.cloneNode(true);
+        sheet.dataset.recordId = id;
+        document.getElementById('tables').appendChild(sheet);
+      }
+    });
+    document.querySelectorAll('.sheet-card').forEach(sheet => {
+      if(!recordIds.includes(Number(sheet.dataset.recordId))) sheet.remove();
+    });
+    records = recordIds.map(id => {
+      const saved = byId.get(id);
+      const rows = Array.isArray(saved?.rows) ? saved.rows.map(row => {
+        if(row.type === 'halfDay') return { ...row, halfDayPeriod: row.halfDayPeriod === 'morning' ? 'morning' : 'afternoon' };
+        if(row.type !== 'divider' || typeof row.label !== 'string' || !row.label.toLowerCase().includes('half day')) return row;
+        return { ...row, type: 'halfDay', halfDayPeriod: 'afternoon', date: '', morningIn: '', morningOut: '', afternoonIn: '', afternoonOut: '', duration: '', sales: '' };
+      }) : [];
+      const record = saved ? { ...createRecord(id), ...saved, rows } : createRecord(id);
+      const maxRowId = record.rows.reduce((highest, row) => Math.max(highest, Number(row.id) || 0), 0);
+      rowIds.set(id, maxRowId + 1);
+      if(!saved){
+        addDefaultRows(record);
+        const sheet = getSheet(id);
+        sheet.querySelector('[data-record-field="sellerName"]').value = '';
+        sheet.querySelector('[data-record-field="approvedBy"]').value = '';
+      }
+      const sheet = getSheet(id);
+      sheet.querySelectorAll('[data-record-field]').forEach(input => {
+        input.value = record[input.dataset.recordField] ?? '';
+      });
+      renderRows(record);
+      updateDurationCalculator(id);
+      return record;
+    });
+    records.forEach(record => document.getElementById('tables').appendChild(getSheet(record.id)));
+    currentTableId = recordIds[0] ?? null;
+    nextRecordId = Math.max(0, ...recordIds, ...byId.keys()) + 1;
+  }catch(error){
+    console.error('Failed to load live seller tracker:', error);
+    setSaveIndicator('error');
+    showFlash('Could not load the live seller tracker. Refresh to try again.', true);
+    nextRecordId = Math.max(0, ...records.map(record => record.id), ...[...document.querySelectorAll('.sheet-card')].map(sheet => Number(sheet.dataset.recordId))) + 1;
+  }
+}
+
+document.getElementById('addTableButton').addEventListener('click', addTable);
+initializeTracker();
+</script>
+</body>
+</html>

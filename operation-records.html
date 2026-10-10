@@ -2,86 +2,506 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Operation Record</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Operation Records — Stockline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
-  body{ font-family: Arial, Helvetica, sans-serif; padding:24px; background:#fff; }
-  table{ border-collapse:collapse; width:100%; max-width:900px; }
-  th, td{ border:1px solid #000; padding:6px 8px; font-size:14px; }
-  th{ background:#dbe5f1; text-transform:uppercase; font-size:12px; }
-  td input, td select{ width:100%; border:none; font:inherit; font-size:14px; padding:2px; box-sizing:border-box; }
-  td input:focus, td select:focus{ outline:1px solid #2F5D9A; }
-  .date-row td{ background:#f9dcc4; font-weight:bold; text-transform:uppercase; width:90px; }
-  .date-row .date-input-cell{ background:#fff; }
-  tfoot td{ background:#dbe5f1; font-weight:bold; }
-  .actions{ margin-bottom:12px; }
-  button{ padding:6px 12px; font-size:13px; cursor:pointer; }
+  :root{
+    --paper:#F3F4F1;
+    --panel:#FFFFFF;
+    --ink:#1B2430;
+    --ink-soft:#5B6472;
+    --line:#E1E4E0;
+    --denim:#2F5D9A;
+    --denim-dark:#234876;
+    --green:#3F7D4F;
+    --green-bg:#E7F2E9;
+    --amber:#A8710A;
+    --amber-bg:#FBF0DC;
+    --red:#B4423A;
+    --red-bg:#FBE9E7;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Inter',sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+    min-height:100vh;
+  }
+  h1,h2,h3{font-family:'Space Grotesk',sans-serif; margin:0;}
+
+  /* ---------- Buttons ---------- */
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    border:1px solid transparent;
+    border-radius:7px;
+    font-family:inherit;
+    font-weight:600;
+    font-size:0.88rem;
+    padding:10px 16px;
+    cursor:pointer;
+    transition:background .12s ease, border-color .12s ease;
+  }
+  .btn-primary{background:var(--denim); color:#fff;}
+  .btn-primary:hover{background:var(--denim-dark);}
+  .btn-outline{background:#fff; border-color:var(--line); color:var(--ink);}
+  .btn-outline:hover{border-color:var(--denim); color:var(--denim);}
+  .btn-danger{background:var(--red-bg); color:var(--red);}
+  .btn-danger:hover{background:#F6D9D6;}
+  .btn-sm{padding:6px 10px; font-size:0.8rem;}
+
+  /* ---------- Shell ---------- */
+  .app-shell{display:flex; min-height:100vh;}
+
+  .hamburger{
+    background:none; border:none; cursor:pointer;
+    width:34px; height:34px; border-radius:7px;
+    display:flex; align-items:center; justify-content:center;
+    color:var(--ink); font-size:1rem;
+  }
+  .hamburger:hover{background:var(--paper);}
+
+  .login-mark{
+    width:40px;height:40px;
+    border-radius:8px;
+    background:var(--denim);
+    color:#fff;
+    display:flex;align-items:center;justify-content:center;
+    font-size:1.05rem;
+  }
+
+  .sidebar{
+    width:216px; flex-shrink:0;
+    background:var(--panel); border-right:1px solid var(--line);
+    padding:18px 12px; overflow:hidden;
+    transition:width .18s ease, padding .18s ease, opacity .12s ease;
+  }
+  .sidebar.collapsed{width:0; padding-left:0; padding-right:0; opacity:0; border-right:0;}
+  .sidebar-brand{display:flex; align-items:center; gap:10px; padding:2px 8px 20px;}
+  .sidebar-brand span{font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:1.02rem; white-space:nowrap;}
+  .nav-label{font-size:0.68rem; font-weight:700; color:var(--ink-soft); letter-spacing:.04em; padding:0 10px; margin:14px 0 6px;}
+  .nav-label:first-of-type{margin-top:0;}
+  .nav-item{
+    display:flex; align-items:center; gap:10px;
+    padding:9px 10px; border-radius:7px;
+    font-size:0.86rem; font-weight:600; color:var(--ink-soft);
+    cursor:pointer; margin-bottom:2px; white-space:nowrap;
+    border:none; background:none; width:100%; text-align:left; font-family:inherit;
+  }
+  .nav-item i{width:16px; text-align:center; font-size:0.85rem;}
+  .nav-item:hover{background:var(--paper); color:var(--ink);}
+  .nav-item.active{background:var(--denim); color:#fff;}
+
+  .main-area{flex:1; min-width:0;}
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 24px;
+    background:var(--panel);
+    border-bottom:1px solid var(--line);
+  }
+  .topbar-left{display:flex; align-items:center; gap:14px;}
+  .topbar-user{display:flex; align-items:center; gap:12px; font-size:0.85rem; color:var(--ink-soft);}
+  .topbar-user b{color:var(--ink);}
+
+  .wrap{max-width:1180px; margin:0 auto; padding:28px;}
+
+  .page-header{display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:20px; gap:16px; flex-wrap:wrap;}
+  .page-header h2{font-size:1.5rem; letter-spacing:-0.01em;}
+  .page-header p{color:var(--ink-soft); font-size:0.88rem; margin:6px 0 0;}
+
+  .backdrop{
+    display:none; position:fixed; inset:0; background:rgba(27,36,48,.42); z-index:35;
+  }
+  .scroll-hint{ display:none; font-size:0.74rem; color:var(--ink-soft); margin:8px 0 0; }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 900px){
+    .sidebar{position:fixed; top:0; bottom:0; left:0; z-index:40; width:240px;}
+    .sidebar:not(.collapsed){box-shadow:2px 0 16px rgba(27,36,48,.18);}
+    .sidebar.collapsed{width:0;}
+    body.nav-open .backdrop{display:block;}
+    .wrap{padding:20px 16px;}
+    .topbar{padding:12px 16px;}
+  }
+  @media (max-width: 720px){
+    .page-header{flex-direction:column; align-items:stretch; gap:12px; margin-bottom:16px;}
+    .page-header h2{font-size:1.25rem;}
+    .page-header .btn{width:100%;}
+    .table-block{padding:12px 12px 14px; margin-bottom:18px;}
+    .table-tools{gap:6px;}
+    .table-tools .btn{flex:1 1 calc(50% - 6px); min-width:0;}
+    .sheet table{min-width:820px;}
+    .sheet th, .sheet td{height:36px;}
+    .sheet td input{font-size:16px;}   /* prevents zoom-on-focus on phones */
+    .scroll-hint{display:block;}
+  }
+  @media (max-width: 520px){
+    .user-label, .logout-text{display:none;}
+    .topbar-user{gap:8px;}
+    .wrap{padding:16px 12px;}
+  }
+
+  /* ---------- Operation tables ---------- */
+  .table-block{
+    background:var(--panel); border:1px solid var(--line); border-radius:10px;
+    padding:16px 20px 20px; margin-bottom:24px;
+    page-break-inside:avoid; break-inside:avoid;
+  }
+  .table-tools{ display:flex; gap:8px; margin-bottom:14px; align-items:center; flex-wrap:wrap; }
+
+  .sheet{ overflow-x:auto; }
+  .sheet table{ border-collapse:collapse; width:100%; min-width:900px; table-layout:fixed; background:#fff; }
+  .sheet th, .sheet td{ border:1px solid #000; padding:0; height:26px; font-size:13px; }
+  .sheet th{ background:#dce6f4; font-weight:400; text-transform:uppercase; text-align:center; font-family:Calibri, 'Inter', Arial, sans-serif; }
+  .sheet td input{
+    width:100%; height:100%; border:none; background:transparent;
+    font:inherit; padding:3px 6px; box-sizing:border-box; text-align:center;
+  }
+  .sheet td input:focus{ outline:2px solid var(--denim); outline-offset:-2px; background:#fffef5; }
+
+  .date-label{ background:#fbe0cf; text-align:center; text-transform:uppercase; }
+  .date-value{ text-align:center; position:relative; }
+  .date-value .dateText{ font-weight:700; padding-right:30px; }
+  .cal-btn{
+    position:absolute; right:3px; top:50%; transform:translateY(-50%);
+    border:none; background:transparent; padding:2px 4px; font-size:14px; cursor:pointer; line-height:1;
+  }
+  .cal-btn:hover{ background:#eef3fa; border-radius:4px; }
+  .calPicker{
+    position:absolute; right:0; top:0; width:30px; height:100%;
+    opacity:0; pointer-events:none; border:none; padding:0;
+  }
+  .sheet .top-blank td.no-border{ border:none; }
+
+  .sheet td.sel, .sheet th.sel{ background:#eaf1fb; }
+  .sheet th.sel{ background:#c9daf2; }
+
+  .empty-note{ color:var(--ink-soft); font-size:0.88rem; padding:20px 0; display:none; }
+
+  /* ---------- Print: only the tables ---------- */
+  @media print{
+    .sidebar, .topbar, .page-header, .table-tools, .cal-btn, .empty-note, .backdrop, .scroll-hint{ display:none !important; }
+    body{ background:#fff; }
+    .app-shell{ display:block; }
+    .wrap{ max-width:none; padding:0; }
+    .table-block{ border:none; padding:0; margin-bottom:20px; border-radius:0; }
+    .sheet{ overflow:visible; }
+    .sheet table{ min-width:0; }
+    .date-value .dateText{ padding-right:6px; }
+    .sheet th, .date-label{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .sheet td.sel{ background:transparent !important; }
+    .sheet th.sel{ background:#dce6f4 !important; }
+    @page{ margin:12mm; }
+  }
 </style>
 </head>
 <body>
 
-<div class="actions">
-  <button onclick="addRow()">+ Add Row</button>
+<div class="backdrop" id="backdrop" onclick="toggleSidebar()"></div>
+
+<div class="app-shell">
+
+  <!-- ============ SIDEBAR ============ -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="login-mark"><i class="fa-solid fa-box"></i></div>
+      <span>Admin Dashboard</span>
+    </div>
+    <p class="nav-label">Menu</p>
+    <button class="nav-item" onclick="window.location.href='dashboard.html'"><i class="fa-solid fa-gauge-high"></i> Dashboard</button>
+    <button class="nav-item" onclick="window.location.href='stocks.html'"><i class="fa-solid fa-ruler"></i> Stocks</button>
+    <button class="nav-item" onclick="window.location.href='joborder.html'"><i class="fa-solid fa-clipboard-list"></i> Job Order Tracker</button>
+    <button class="nav-item" onclick="window.location.href='orders.html'"><i class="fa-solid fa-boxes-stacked"></i> Orders</button>
+    <button class="nav-item" onclick="window.location.href='news.html'"><i class="fa-solid fa-newspaper"></i> News</button>
+    <button class="nav-item active" onclick="window.location.href='operation-records.html'"><i class="fa-solid fa-clipboard-check"></i> Operation Records</button>
+    <button class="nav-item" onclick="window.location.href='live-seller-tracker.html'"><i class="fa-solid fa-chart-line"></i> Live Seller Tracker</button>
+    <button class="nav-item" onclick="window.location.href='tiktok-calendar.html'"><i class="fa-brands fa-tiktok"></i> TikTok Calendar</button>
+    <button class="nav-item" onclick="window.location.href='sewer-record.html'"><i class="fa-solid fa-user-gear"></i> Sewer Record</button>
+  </div>
+
+  <div class="main-area">
+    <div class="topbar">
+      <div class="topbar-left">
+        <button class="hamburger" onclick="toggleSidebar()" aria-label="Toggle menu"><i class="fa-solid fa-bars"></i></button>
+      </div>
+      <div class="topbar-user">
+        <span class="user-label">Signed in as</span> <b id="whoami">admin</b>
+        <button class="btn btn-outline btn-sm" onclick="handleLogout()" aria-label="Log out"><i class="fa-solid fa-arrow-right-from-bracket"></i> <span class="logout-text">Log out</span></button>
+      </div>
+    </div>
+
+    <div class="wrap">
+      <div class="page-header">
+        <div>
+          <h2>Operation Records</h2>
+          <p>Record production work and track operations per day.</p>
+        </div>
+        <button class="btn btn-primary" id="topAddTable" onclick="addTable()" style="display:none;"><i class="fa-solid fa-plus"></i> Add New Table</button>
+      </div>
+
+      <div id="tables"></div>
+      <p class="empty-note" id="emptyNote">No tables yet. Click "Add New Table" to start.</p>
+    </div>
+  </div>
 </div>
 
-<table id="opTable">
-  <tr class="date-row">
-    <td>DATE:</td>
-    <td class="date-input-cell" colspan="6"><input type="date" id="opDate"></td>
-  </tr>
-  <thead>
-    <tr>
-      <th>Name</th>
-      <th>Size</th>
-      <th>Qty</th>
-      <th>Name</th>
-      <th>Operations</th>
-      <th>Start</th>
-      <th>End</th>
-    </tr>
-  </thead>
-  <tbody id="opBody">
-    <!-- rows inserted by JS -->
-  </tbody>
-  <tfoot>
-    <tr>
-      <td colspan="2" style="text-align:right;">TOTAL:</td>
-      <td id="opTotal">0</td>
-      <td colspan="4"></td>
-    </tr>
-  </tfoot>
-</table>
- 
 <script>
-function makeRow(){
+const pad = n => String(n).padStart(2, '0');
+
+function formatDate(d){
+  return d.toLocaleDateString('en-US', {
+    weekday:'long', year:'numeric', month:'long', day:'numeric'
+  });
+}
+function toIso(d){
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+/* ---------- navigation ---------- */
+const isMobile = () => window.matchMedia('(max-width: 900px)').matches;
+
+function toggleSidebar(){
+  const sb = document.getElementById('sidebar');
+  sb.classList.toggle('collapsed');
+  document.body.classList.toggle('nav-open', !sb.classList.contains('collapsed') && isMobile());
+}
+
+// start with the menu closed on phones/tablets; keep it in sync on resize
+function syncSidebar(){
+  const sb = document.getElementById('sidebar');
+  if(isMobile()){
+    sb.classList.add('collapsed');
+    document.body.classList.remove('nav-open');
+  } else {
+    sb.classList.remove('collapsed');
+    document.body.classList.remove('nav-open');
+  }
+}
+let lastMobile = isMobile();
+window.addEventListener('resize', () => {
+  if(isMobile() !== lastMobile){ lastMobile = isMobile(); syncSidebar(); }
+});
+syncSidebar();
+function handleLogout(){
+  sessionStorage.removeItem('stockline-authenticated');
+  window.location.href = 'dashboard.html';
+}
+
+/* ---------- rows ---------- */
+function makeRow(types){
   const tr = document.createElement('tr');
-  tr.innerHTML = `
-    <td><input type="text" placeholder="Product name"></td>
-    <td><input type="text" placeholder="e.g. 2XL-110"></td>
-    <td><input type="number" min="0" class="qty" oninput="updateTotal()"></td>
-    <td><input type="text" placeholder="Worker name"></td>
-    <td><input type="text" placeholder="Sewing"></td>
-    <td><input type="datetime-local"></td>
-    <td><input type="datetime-local"></td>
-  `;
+  types.forEach(type => {
+    const td = document.createElement('td');
+    const input = document.createElement('input');
+    input.type = type;
+    if(type === 'number') input.min = '0';
+    td.appendChild(input);
+    tr.appendChild(td);
+  });
   return tr;
 }
 
-function addRow(count){
-  const body = document.getElementById('opBody');
-  for(let i = 0; i < (count || 1); i++){
-    body.appendChild(makeRow());
+function addRow(tbody, types, count){
+  for(let i = 0; i < (count || 1); i++) tbody.appendChild(makeRow(types));
+}
+
+function flashBtn(btn, text){
+  const label = btn.querySelector('span');
+  const old = label.textContent;
+  label.textContent = text;
+  setTimeout(() => { label.textContent = old; }, 1600);
+}
+
+/* ---------- tables ---------- */
+// Shows the top "Add New Table" button only when no tables are left
+function syncTopAdd(){
+  const none = document.querySelectorAll('.table-block').length === 0;
+  document.getElementById('topAddTable').style.display = none ? 'inline-flex' : 'none';
+  document.getElementById('emptyNote').style.display = none ? 'block' : 'none';
+}
+
+function addTable(){
+  const block = document.createElement('div');
+  block.className = 'table-block';
+  block.innerHTML = `
+    <div class="table-tools">
+      <button type="button" class="btn btn-primary btn-sm btn-add-row"><i class="fa-solid fa-plus"></i> <span>Add Row</span></button>
+      <button type="button" class="btn btn-outline btn-sm btn-add-table"><i class="fa-solid fa-plus"></i> <span>Add New Table</span></button>
+      <button type="button" class="btn btn-danger btn-sm btn-remove-row" title="Removes the row you last clicked (or the last row)"><i class="fa-solid fa-minus"></i> <span>Remove Row</span></button>
+      <button type="button" class="btn btn-danger btn-sm btn-remove-col" title="Removes the column you last clicked (or the last column)"><i class="fa-solid fa-minus"></i> <span>Remove Column</span></button>
+      <button type="button" class="btn btn-danger btn-sm btn-remove"><i class="fa-solid fa-trash"></i> <span>Remove Table</span></button>
+      <button type="button" class="btn btn-outline btn-sm btn-print"><i class="fa-solid fa-print"></i> <span>Print</span></button>
+    </div>
+    <div class="sheet">
+      <table>
+        <colgroup>
+          <col style="width:12%"><col style="width:15%"><col style="width:13%"><col style="width:9%">
+          <col style="width:13%"><col style="width:14%"><col style="width:12%"><col style="width:12%">
+        </colgroup>
+        <thead>
+          <tr class="top-blank">
+            <td class="date-label">Date:</td>
+            <td class="date-value" colspan="2">
+              <input type="text" class="dateText" aria-label="Date">
+              <button type="button" class="cal-btn" aria-label="Open calendar" title="Pick from calendar">&#128197;</button>
+              <input type="date" class="calPicker" tabindex="-1" aria-hidden="true">
+            </td>
+            <td class="blank-cell"></td>
+            <td class="no-border" colspan="4"></td>
+          </tr>
+          <tr class="head-row">
+            <th>Job Order</th><th>Name</th><th>Size</th><th>Qty</th>
+            <th>Name</th><th>Operations</th><th>Start</th><th>End</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <p class="scroll-hint"><i class="fa-solid fa-arrows-left-right"></i> Swipe sideways to see all columns</p>
+  `;
+
+  const dateText  = block.querySelector('.dateText');
+  const calPicker = block.querySelector('.calPicker');
+  const tbody     = block.querySelector('tbody');
+  const colgroup  = block.querySelector('colgroup');
+  const headRow   = block.querySelector('.head-row');
+
+  // what each column holds (used for new rows and kept in sync when a column is removed)
+  const colTypes = ['text','text','text','number','text','text','text','text'];
+  const MIN_COLS = 2;
+
+  // default date: today
+  const today = new Date();
+  dateText.value = formatDate(today);
+  calPicker.value = toIso(today);
+
+  // calendar button
+  block.querySelector('.cal-btn').addEventListener('click', () => {
+    const typed = new Date(dateText.value);
+    if(!isNaN(typed)) calPicker.value = toIso(typed);
+    if(calPicker.showPicker){
+      calPicker.style.pointerEvents = 'auto';
+      calPicker.showPicker();
+    } else {
+      calPicker.focus();
+      calPicker.click();
+    }
+  });
+  calPicker.addEventListener('change', () => {
+    if(!calPicker.value) return;
+    const [y, m, d] = calPicker.value.split('-').map(Number);
+    dateText.value = formatDate(new Date(y, m - 1, d));
+    calPicker.style.pointerEvents = 'none';
+  });
+
+  /* ----- selection: remembers the last clicked row / column ----- */
+  const sel = { row:null, col:null };
+
+  function updateHighlight(){
+    block.querySelectorAll('.sel').forEach(el => el.classList.remove('sel'));
+    if(sel.row && sel.row.isConnected){
+      sel.row.querySelectorAll('td').forEach(td => td.classList.add('sel'));
+    }
+    if(sel.col !== null){
+      const th = headRow.children[sel.col];
+      if(th) th.classList.add('sel');
+      tbody.querySelectorAll('tr').forEach(tr => {
+        const td = tr.children[sel.col];
+        if(td) td.classList.add('sel');
+      });
+    }
   }
+
+  tbody.addEventListener('focusin', e => {
+    const td = e.target.closest('td');
+    if(!td) return;
+    sel.row = td.parentElement;
+    sel.col = td.cellIndex;
+    updateHighlight();
+  });
+  headRow.addEventListener('click', e => {
+    const th = e.target.closest('th');
+    if(!th) return;
+    sel.col = th.cellIndex;
+    updateHighlight();
+  });
+
+  /* ----- keep the Date row the same width as the table after a column is removed ----- */
+  function layoutTopRow(){
+    const n = colTypes.length;
+    const dateCell  = block.querySelector('.date-value');
+    const blankCell = block.querySelector('.blank-cell');
+    const freeCell  = block.querySelector('.no-border');
+    const dateSpan = Math.min(2, n - 1);
+    dateCell.colSpan = dateSpan;
+    let rest = n - 1 - dateSpan;
+    if(rest >= 1){ blankCell.style.display = ''; rest -= 1; } else { blankCell.style.display = 'none'; }
+    if(rest >= 1){ freeCell.style.display = ''; freeCell.colSpan = rest; } else { freeCell.style.display = 'none'; }
+  }
+
+  /* ----- toolbar buttons ----- */
+  const addRowBtn = block.querySelector('.btn-add-row');
+  addRowBtn.addEventListener('click', () => addRow(tbody, colTypes));
+
+  block.querySelector('.btn-remove-row').addEventListener('click', e => {
+    const btn = e.currentTarget;
+    const rows = tbody.querySelectorAll('tr');
+    if(!rows.length){ flashBtn(btn, 'No rows left'); return; }
+    const target = (sel.row && sel.row.isConnected) ? sel.row : rows[rows.length - 1];
+    target.remove();
+    sel.row = null;
+    updateHighlight();
+  });
+
+  block.querySelector('.btn-remove-col').addEventListener('click', e => {
+    const btn = e.currentTarget;
+    if(colTypes.length <= MIN_COLS){ flashBtn(btn, 'Keep 2 columns min'); return; }
+    const idx = (sel.col !== null && sel.col < colTypes.length) ? sel.col : colTypes.length - 1;
+    headRow.children[idx].remove();
+    colgroup.children[idx].remove();
+    tbody.querySelectorAll('tr').forEach(tr => { if(tr.children[idx]) tr.children[idx].remove(); });
+    colTypes.splice(idx, 1);
+    sel.col = null;
+    layoutTopRow();
+    updateHighlight();
+  });
+
+  block.querySelector('.btn-add-table').addEventListener('click', () => addTable());
+  block.querySelector('.btn-print').addEventListener('click', () => window.print());
+
+  // Remove Table: click once to arm, click again to confirm (no popups needed)
+  const removeBtn = block.querySelector('.btn-remove');
+  const removeLabel = removeBtn.querySelector('span');
+  let armTimer = null;
+  removeBtn.addEventListener('click', () => {
+    if(removeBtn.dataset.armed === '1'){
+      clearTimeout(armTimer);
+      block.remove();
+      syncTopAdd();
+      return;
+    }
+    removeBtn.dataset.armed = '1';
+    removeLabel.textContent = 'Click again to confirm';
+    armTimer = setTimeout(() => {
+      removeBtn.dataset.armed = '';
+      removeLabel.textContent = 'Remove Table';
+    }, 3000);
+  });
+
+  addRow(tbody, colTypes, 5);   // 5 blank rows, like the sheet
+  const tables = document.getElementById('tables');
+  const existingTables = tables.querySelectorAll('.table-block');
+  const lastTable = existingTables[existingTables.length - 1];
+  if(lastTable) lastTable.after(block);
+  else tables.appendChild(block);
+  syncTopAdd();
 }
 
-function updateTotal(){
-  const qtys = document.querySelectorAll('#opBody .qty');
-  let total = 0;
-  qtys.forEach(input => { total += parseInt(input.value, 10) || 0; });
-  document.getElementById('opTotal').textContent = total;
-}
-
-// start with 7 blank rows, like a ready-to-fill sheet
-addRow(7);
+// start with one table
+addTable();
 </script>
 
 </body>

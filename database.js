@@ -3,6 +3,7 @@ const TABLE_PRODUCTS = 'products';
 const TABLE_JOBORDERS = 'joborders';
 const TABLE_NEWS = 'news';
 const TABLE_OPERATIONS = 'operations';
+const PRODUCTS_INITIALIZED_KEY = 'stockline:products-initialized';
 const STORAGE_SHARED = true;
 const LOCAL_DB_NAME = 'stockline-db';
 const LOCAL_DB_VERSION = 1;
@@ -278,9 +279,16 @@ async function seedTableIfEmpty(table, rows){
 
 async function loadAppData(){
   let loadedProducts = await loadTable(TABLE_PRODUCTS);
-  if(!loadedProducts){
+  const productsInitialized = await storage.get(PRODUCTS_INITIALIZED_KEY, STORAGE_SHARED);
+  if(!loadedProducts && productsInitialized?.value === 'true'){
+    loadedProducts = [];
+  }else if(!loadedProducts){
     loadedProducts = DEFAULT_PRODUCTS.map(p => ({...p, sizes: {...p.sizes}}));
     await seedTableIfEmpty(TABLE_PRODUCTS, loadedProducts);
+  }
+  if(!productsInitialized || productsInitialized.value !== 'true'){
+    const result = await storage.set(PRODUCTS_INITIALIZED_KEY, 'true', STORAGE_SHARED);
+    if(!result) throw new Error('Could not persist product initialization state.');
   }
   let loadedJobOrders = await loadTable(TABLE_JOBORDERS);
   if(!loadedJobOrders){
