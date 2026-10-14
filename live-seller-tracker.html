@@ -61,6 +61,17 @@
   .sheet th,.sheet td{border:1px solid #222;height:34px;padding:0;font-size:13px;}
   .sheet td input{width:100%;height:100%;border:0;background:transparent;font:inherit;padding:4px 6px;text-align:center;color:#111;}
   .sheet td input:focus{outline:2px solid var(--denim);outline-offset:-2px;background:#fffef5;}
+  .sheet .time-picker{position:relative;width:100%;height:100%;min-width:0;}
+  .sheet .time-picker.open{z-index:21;}
+  .sheet .time-picker-toggle{width:100%;height:100%;border:0;background:transparent;color:#111;font:inherit;padding:4px 2px;cursor:pointer;white-space:nowrap;}
+  .sheet .time-picker-toggle:focus{outline:2px solid var(--denim);outline-offset:-2px;background:#fffef5;}
+  .sheet .time-picker-panel{position:absolute;z-index:20;bottom:100%;left:50%;transform:translateX(-50%);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;width:230px;box-sizing:border-box;padding:6px;background:#fff;border:1px solid var(--line);border-radius:6px;box-shadow:0 4px 12px rgba(27,36,48,.2);}
+  .sheet .time-picker-panel[hidden]{display:none;}
+  .sheet .time-wheel{width:auto;min-width:0;height:112px;overflow-y:auto;overscroll-behavior:contain;scroll-snap-type:y mandatory;scrollbar-width:thin;scrollbar-color:#b8c0cc transparent;padding:42px 0;}
+  .sheet .time-wheel-option{height:28px;display:flex;align-items:center;justify-content:center;scroll-snap-align:center;font:inherit;font-size:13px;cursor:pointer;user-select:none;}
+  .sheet .time-wheel-option[aria-selected="true"]{font-weight:700;color:var(--denim);background:#edf2f8;}
+  .sheet .time-picker-clear{grid-column:1/-1;border:0;border-top:1px solid var(--line);background:#fff;color:var(--ink-soft);font:inherit;font-size:.76rem;padding:5px;cursor:pointer;}
+  .sheet .time-picker-clear:hover{color:var(--red);}
   .sheet .title-cell{height:31px;text-align:center;font-weight:700;font-size:14px;}
   .sheet .seller-cell{height:31px;text-align:center;}
   .sheet .info-label{text-align:center;text-transform:uppercase;}
@@ -275,6 +286,102 @@ function getSheet(recordId){
   return document.querySelector(`.sheet-card[data-record-id="${recordId}"]`);
 }
 
+function renderTimePicker(field, label){
+  return `<div class="time-picker" data-time-picker>
+    <button type="button" class="time-picker-toggle" data-time-picker-toggle aria-label="${label}" aria-haspopup="group" aria-expanded="false">--</button>
+    <div class="time-picker-panel" data-time-picker-panel role="group" aria-label="${label} time" hidden>
+      <div class="time-wheel" data-time-part="hour" role="spinbutton" aria-label="${label} hour" aria-valuemin="1" aria-valuemax="12" tabindex="0"></div>
+      <div class="time-wheel" data-time-part="minute" role="spinbutton" aria-label="${label} minute" aria-valuemin="0" aria-valuemax="59" tabindex="0"></div>
+      <div class="time-wheel" data-time-part="period" role="spinbutton" aria-label="${label} AM or PM" aria-valuemin="0" aria-valuemax="1" tabindex="0"></div>
+      <button type="button" class="time-picker-clear" data-time-picker-clear>Clear time</button>
+    </div>
+    <input type="hidden" data-field="${field}">
+  </div>`;
+}
+
+const timeWheelValues = {
+  hour: Array.from({length:12}, (_, index) => String(index + 1)),
+  minute: Array.from({length:60}, (_, index) => String(index).padStart(2, '0')),
+  period: ['AM', 'PM']
+};
+
+function setTimeWheelSelection(wheel, index){
+  const options = wheel.querySelectorAll('.time-wheel-option');
+  const boundedIndex = Math.max(0, Math.min(index, options.length - 1));
+  wheel.dataset.valueIndex = String(boundedIndex);
+  options.forEach((option, optionIndex) => {
+    option.setAttribute('aria-selected', String(optionIndex === boundedIndex));
+  });
+  wheel.setAttribute('aria-valuenow', timeWheelValues[wheel.dataset.timePart][boundedIndex]);
+}
+
+function setTimeWheelIndex(wheel, index){
+  const boundedIndex = Math.max(0, Math.min(index, wheel.querySelectorAll('.time-wheel-option').length - 1));
+  setTimeWheelSelection(wheel, boundedIndex);
+  wheel.scrollTop = boundedIndex * 28;
+}
+
+function displayTimePickerValue(picker, value){
+  const time = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(value || '');
+  if(!time){
+    picker.querySelector('[data-time-picker-toggle]').textContent = '--';
+    return;
+  }
+  const hour24 = time ? Number(time[1]) : 0;
+  const hour12 = hour24 % 12 || 12;
+  picker.querySelector('[data-time-picker-toggle]').textContent = `${hour12}:${time[2]} ${hour24 < 12 ? 'AM' : 'PM'}`;
+}
+
+function initializeTimeWheels(picker, value){
+  const time = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(value || '');
+  const hour24 = time ? Number(time[1]) : 0;
+  const hour12 = hour24 % 12 || 12;
+  const indices = {
+    hour: time ? hour12 - 1 : 11,
+    minute: time ? Number(time[2]) : 0,
+    period: hour24 < 12 ? 0 : 1
+  };
+  picker.querySelectorAll('.time-wheel').forEach(wheel => {
+    const values = timeWheelValues[wheel.dataset.timePart];
+    if(!wheel.childElementCount){
+      wheel.innerHTML = values.map((item, index) => `<div class="time-wheel-option" role="option" data-index="${index}" aria-selected="false">${item}</div>`).join('');
+    }
+    setTimeWheelIndex(wheel, indices[wheel.dataset.timePart]);
+  });
+}
+
+function updateTimePicker(picker){
+  const indices = {};
+  picker.querySelectorAll('.time-wheel').forEach(wheel => {
+    indices[wheel.dataset.timePart] = Number(wheel.dataset.valueIndex);
+  });
+  const hour12 = indices.hour + 1;
+  const hour24 = hour12 % 12 + (indices.period === 1 ? 12 : 0);
+  const minute = String(indices.minute).padStart(2, '0');
+  const value = `${String(hour24).padStart(2, '0')}:${minute}`;
+  picker.querySelector('[data-field]').value = value;
+  displayTimePickerValue(picker, value);
+  picker.dispatchEvent(new Event('timechange', {bubbles:true}));
+}
+
+function openTimePicker(picker){
+  document.querySelectorAll('.time-picker-panel:not([hidden])').forEach(panel => {
+    if(panel.closest('.time-picker') !== picker) closeTimePicker(panel.closest('.time-picker'));
+  });
+  const panel = picker.querySelector('[data-time-picker-panel]');
+  initializeTimeWheels(picker, picker.querySelector('[data-field]').value);
+  panel.hidden = false;
+  picker.classList.add('open');
+  picker.querySelector('[data-time-picker-toggle]').setAttribute('aria-expanded', 'true');
+}
+
+function closeTimePicker(picker){
+  if(!picker) return;
+  picker.querySelector('[data-time-picker-panel]').hidden = true;
+  picker.classList.remove('open');
+  picker.querySelector('[data-time-picker-toggle]').setAttribute('aria-expanded', 'false');
+}
+
 function renderRows(record){
   const body = getSheet(record.id).querySelector('[data-record-rows]');
   body.innerHTML = record.rows.map(row => {
@@ -291,12 +398,12 @@ function renderRows(record){
       const halfDayPeriod = row.halfDayPeriod === 'morning' ? 'morning' : 'afternoon';
       const morningCells = halfDayPeriod === 'morning'
         ? `<td colspan="2" class="half-day-label"><button class="drag-handle" type="button" draggable="true" data-drag-half-day="${row.id}" aria-label="Drag Half Day row" title="Drag to Morning or Afternoon"><i class="fa-solid fa-grip-vertical"></i></button>${escapeHtml(row.label || '**** HALF DAY ****')}</td>`
-        : `<td><input type="time" data-field="morningIn" aria-label="Morning live in"></td>
-           <td><input type="time" data-field="morningOut" aria-label="Morning live out"></td>`;
+        : `<td>${renderTimePicker('morningIn', 'Morning live in')}</td>
+           <td>${renderTimePicker('morningOut', 'Morning live out')}</td>`;
       const afternoonCells = halfDayPeriod === 'afternoon'
         ? `<td colspan="2" class="half-day-label"><button class="drag-handle" type="button" draggable="true" data-drag-half-day="${row.id}" aria-label="Drag Half Day row" title="Drag to Morning or Afternoon"><i class="fa-solid fa-grip-vertical"></i></button>${escapeHtml(row.label || '**** HALF DAY ****')}</td>`
-        : `<td><input type="time" data-field="afternoonIn" aria-label="Afternoon live in"></td>
-           <td><input type="time" data-field="afternoonOut" aria-label="Afternoon live out"></td>`;
+        : `<td>${renderTimePicker('afternoonIn', 'Afternoon live in')}</td>
+           <td>${renderTimePicker('afternoonOut', 'Afternoon live out')}</td>`;
       return `<tr data-row-id="${row.id}">
         <td><input type="date" data-field="date" aria-label="Date"></td>
         ${morningCells}
@@ -308,10 +415,10 @@ function renderRows(record){
     }
     return `<tr data-row-id="${row.id}">
       <td><input type="date" data-field="date" aria-label="Date"></td>
-      <td><input type="time" data-field="morningIn" aria-label="Morning live in"></td>
-      <td><input type="time" data-field="morningOut" aria-label="Morning live out"></td>
-      <td><input type="time" data-field="afternoonIn" aria-label="Afternoon live in"></td>
-      <td><input type="time" data-field="afternoonOut" aria-label="Afternoon live out"></td>
+      <td>${renderTimePicker('morningIn', 'Morning live in')}</td>
+      <td>${renderTimePicker('morningOut', 'Morning live out')}</td>
+      <td>${renderTimePicker('afternoonIn', 'Afternoon live in')}</td>
+      <td>${renderTimePicker('afternoonOut', 'Afternoon live out')}</td>
       <td><input type="text" data-field="duration" aria-label="Duration" placeholder="e.g. 8 hrs"></td>
       <td><input type="number" min="0" step="0.01" data-field="sales" aria-label="Sales"></td>
       <td class="action-cell"><button class="row-remove" type="button" data-remove-row="${row.id}" aria-label="Remove row"><i class="fa-solid fa-xmark"></i></button></td>
@@ -323,8 +430,13 @@ function renderRows(record){
     const tr = body.querySelector(`[data-row-id="${row.id}"]`);
     Object.entries(row).forEach(([field, value]) => {
       const input = tr.querySelector(`[data-field="${field}"]`);
-      if(input) input.value = value;
+      if(input){
+        input.value = value;
+        const timePicker = input.closest('[data-time-picker]');
+        if(timePicker) displayTimePickerValue(timePicker, value);
+      }
     });
+
   });
 }
 
@@ -490,6 +602,59 @@ document.getElementById('tables').addEventListener('change', event => {
   if(!sheet || event.target.matches('[data-duration-hours], [data-duration-minutes], [data-duration-seconds]')) return;
   queueSave(records.find(item => item.id === Number(sheet.dataset.recordId)));
 });
+document.getElementById('tables').addEventListener('timechange', event => {
+  const sheet = event.target.closest('.sheet-card');
+  if(sheet) queueSave(records.find(item => item.id === Number(sheet.dataset.recordId)));
+});
+document.getElementById('tables').addEventListener('click', event => {
+  const toggle = event.target.closest('[data-time-picker-toggle]');
+  if(toggle){
+    const picker = toggle.closest('[data-time-picker]');
+    if(toggle.getAttribute('aria-expanded') === 'true') closeTimePicker(picker);
+    else openTimePicker(picker);
+    return;
+  }
+  const clearButton = event.target.closest('[data-time-picker-clear]');
+  if(clearButton){
+    const picker = clearButton.closest('[data-time-picker]');
+    picker.querySelector('[data-field]').value = '';
+    displayTimePickerValue(picker, '');
+    closeTimePicker(picker);
+    picker.dispatchEvent(new Event('timechange', {bubbles:true}));
+    return;
+  }
+  const option = event.target.closest('.time-wheel-option');
+  if(option){
+    const wheel = option.closest('.time-wheel');
+    setTimeWheelIndex(wheel, Number(option.dataset.index));
+    updateTimePicker(wheel.closest('[data-time-picker]'));
+  }
+});
+document.getElementById('tables').addEventListener('scroll', event => {
+  const wheel = event.target.closest('.time-wheel');
+  if(!wheel) return;
+  const index = Math.max(0, Math.min(Math.round(wheel.scrollTop / 28), timeWheelValues[wheel.dataset.timePart].length - 1));
+  if(index === Number(wheel.dataset.valueIndex)) return;
+  setTimeWheelSelection(wheel, index);
+  updateTimePicker(wheel.closest('[data-time-picker]'));
+}, true);
+document.getElementById('tables').addEventListener('keydown', event => {
+  const wheel = event.target.closest('.time-wheel');
+  if(!wheel) return;
+  const currentIndex = Number(wheel.dataset.valueIndex);
+  let nextIndex = currentIndex;
+  if(event.key === 'ArrowDown') nextIndex++;
+  else if(event.key === 'ArrowUp') nextIndex--;
+  else if(event.key === 'Home') nextIndex = 0;
+  else if(event.key === 'End') nextIndex = timeWheelValues[wheel.dataset.timePart].length - 1;
+  else if(event.key === 'Escape'){
+    closeTimePicker(wheel.closest('[data-time-picker]'));
+    return;
+  }else return;
+  event.preventDefault();
+  setTimeWheelIndex(wheel, nextIndex);
+  updateTimePicker(wheel.closest('[data-time-picker]'));
+});
 document.getElementById('tables').addEventListener('focusin', event => {
   const sheet = event.target.closest('.sheet-card');
   if(sheet) currentTableId = Number(sheet.dataset.recordId);
@@ -501,6 +666,10 @@ document.getElementById('tables').addEventListener('focusin', event => {
   if(record && record.rows.some(item => item.id === rowId && (item.type === 'entry' || item.type === 'halfDay'))){
     selectedRows.set(recordId, rowId);
   }
+});
+document.addEventListener('pointerdown', event => {
+  if(event.target.closest('[data-time-picker]')) return;
+  document.querySelectorAll('.time-picker.open').forEach(closeTimePicker);
 });
 document.getElementById('tables').addEventListener('dragstart', event => {
   const handle = event.target.closest('[data-drag-half-day]');
