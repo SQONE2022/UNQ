@@ -353,15 +353,15 @@
         <span>Admin Dashboard</span>
       </div>
       <p class="nav-label">Menu</p>
-      <button class="nav-item active" data-view="dashboard" onclick="window.location.href='dashboard.html'"><i class="fa-solid fa-gauge-high"></i> Dashboard</button>
-      <button class="nav-item" data-view="stocks" onclick="window.location.href='stocks.html'"><i class="fa-solid fa-ruler"></i> Stocks</button>
-      <button class="nav-item" data-view="joborders" onclick="window.location.href='joborder.html'"><i class="fa-solid fa-clipboard-list"></i> Job Order Tracker</button>
-      <button class="nav-item" onclick="window.location.href='orders.html'"><i class="fa-solid fa-boxes-stacked"></i> Orders</button>
-      <button class="nav-item" onclick="window.location.href='news.html'"><i class="fa-solid fa-newspaper"></i> News</button>
-      <button class="nav-item" data-view="operations" onclick="window.location.href='operation-records.html'"><i class="fa-solid fa-clipboard-check"></i> Operation Records</button>
-      <button class="nav-item" onclick="window.location.href='live-seller-tracker.html'"><i class="fa-solid fa-chart-line"></i> Live Seller Tracker</button>
-      <button class="nav-item" onclick="window.location.href='tiktok-calendar.html'"><i class="fa-brands fa-tiktok"></i> TikTok Calendar</button>
-      <button class="nav-item" onclick="window.location.href='sewer-record.html'"><i class="fa-solid fa-user-gear"></i> Sewer Record</button>
+      <button class="nav-item active" data-view="dashboard" onclick="window.top.location.href='dashboard.html'"><i class="fa-solid fa-gauge-high"></i> Dashboard</button>
+      <button class="nav-item" data-view="stocks" onclick="window.top.location.href='stocks.html'"><i class="fa-solid fa-ruler"></i> Stocks</button>
+      <button class="nav-item" data-view="joborders" onclick="window.top.location.href='joborder.html'"><i class="fa-solid fa-clipboard-list"></i> Job Order Tracker</button>
+      <button class="nav-item" onclick="window.top.location.href='orders.html'"><i class="fa-solid fa-boxes-stacked"></i> Orders</button>
+      <button class="nav-item" onclick="window.top.location.href='news.html'"><i class="fa-solid fa-newspaper"></i> News</button>
+      <button class="nav-item" data-view="operations" onclick="window.top.location.href='operation-records.html'"><i class="fa-solid fa-clipboard-check"></i> Operation Records</button>
+      <button class="nav-item" onclick="window.top.location.href='live-seller-tracker.html'"><i class="fa-solid fa-chart-line"></i> Live Seller Tracker</button>
+      <button class="nav-item" onclick="window.top.location.href='tiktok-calendar.html'"><i class="fa-brands fa-tiktok"></i> TikTok Calendar</button>
+      <button class="nav-item" onclick="window.top.location.href='sewer-record.html'"><i class="fa-solid fa-user-gear"></i> Sewer Record</button>
     </div>
 
     <div class="main-area">
@@ -471,18 +471,19 @@
               </table>
             </div>
             <p class="legend">
-              Available = real stock − reserved stock − non-cancelled/non-returned order quantities across all dates.
+              Available stock per size = real stock − reserved stock − non-cancelled/non-returned order quantities across all dates.
             </p>
             <p class="legend">
-              <span class="badge badge-green">green</span> = healthy stock &nbsp;
-              <span class="badge badge-red">red</span> = out of stock
+              <span class="badge badge-red">0–10</span> &nbsp;
+              <span class="badge badge-yellow">11–20</span> &nbsp;
+              <span class="badge badge-green">21+</span> available units
             </p>
           </div>
 
           <div class="card" style="margin-top:20px;">
             <div class="card-header"><h3><i class="fa-solid fa-boxes-stacked" style="color:var(--denim);"></i> Real Stock by Size</h3></div>
             <div class="table-wrap stock-quantity-table-wrap"><table class="stock-quantity-table"><thead><tr><th>SKU</th><th>Product</th><th style="text-align:center;">XS</th><th style="text-align:center;">S</th><th style="text-align:center;">M</th><th style="text-align:center;">L</th><th style="text-align:center;">XL</th><th style="text-align:center;">2XL</th><th style="text-align:center;">3XL</th><th style="text-align:center;">Other</th><th style="text-align:center;">Total</th></tr></thead><tbody id="realStockBody"></tbody></table></div>
-            <p class="legend">Physical stock on hand. Edit these quantities to update real stock.</p>
+            <p class="legend">Total physical stock on hand, including reserved units. Edit these quantities to update real stock.</p>
           </div>
 
           <div class="card" style="margin-top:20px;">
@@ -788,6 +789,12 @@ function availableStock(product, size){
   return startingStock - reserved - sold;
 }
 
+function stockLevelBadgeClass(quantity){
+  if(quantity <= 10) return 'badge-red';
+  if(quantity <= 20) return 'badge-yellow';
+  return 'badge-green';
+}
+
 window.addEventListener('focus', async() => {
   if(!products.length || document.getElementById('dashboard').style.display === 'none') return;
   await loadOrderSalesForStock();
@@ -843,7 +850,7 @@ function renderTable(){
     const total = SIZES.reduce((sum, s) => sum + availableStock(p, s), 0);
     const cells = SIZES.map(s => {
       const qty = availableStock(p, s);
-      const cls = qty <= 0 ? 'badge-red' : 'badge-green';
+      const cls = stockLevelBadgeClass(qty);
       const price = p.prices?.[s] ?? p.price ?? 0;
       return `<td style="text-align:center;"><span class="badge ${cls}">${qty}</span><br><span class="price-note">₱${price.toFixed(2)}</span></td>`;
     }).join('');
@@ -855,7 +862,7 @@ function renderTable(){
           ${p.name}
         </td>
         ${cells}
-        <td style="text-align:center; font-weight:800;">${total}</td>
+        <td style="text-align:center;"><span class="badge ${stockLevelBadgeClass(total)}">${total}</span></td>
         <td>
           <div class="row-actions">
             <button class="btn btn-outline btn-sm" onclick="openEditModal(${p.id})"><i class="fa-solid fa-pen"></i></button>
