@@ -41,6 +41,7 @@
   .page-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:20px;gap:16px;flex-wrap:wrap;}
   .page-header h2{font-size:1.5rem;}
   .page-header p{color:var(--ink-soft);font-size:.88rem;margin:6px 0 0;}
+  .page-actions{display:flex;gap:8px;flex-wrap:wrap;}
   .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid transparent;border-radius:7px;font-family:inherit;font-weight:600;font-size:.86rem;padding:9px 13px;cursor:pointer;}
   .btn-primary{background:var(--denim);color:#fff;}
   .btn-primary:hover{background:var(--denim-dark);}
@@ -48,6 +49,12 @@
   .btn-outline:hover{border-color:var(--denim);color:var(--denim);}
   .btn-danger{background:var(--red-bg);color:var(--red);}
   .btn-sm{padding:6px 9px;font-size:.78rem;}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+  .table-dropdown{position:relative;}
+  .table-dropdown-menu{position:absolute;z-index:10;top:calc(100% + 6px);right:0;display:grid;min-width:250px;padding:5px;border:1px solid var(--line);border-radius:8px;background:#fff;box-shadow:0 8px 20px #1b243026;}
+  .table-dropdown-menu[hidden]{display:none;}
+  .table-dropdown-option{padding:9px 10px;border:0;border-radius:5px;background:#fff;color:var(--ink);font:500 .82rem Inter,sans-serif;text-align:left;cursor:pointer;}
+  .table-dropdown-option:hover,.table-dropdown-option:focus{background:var(--paper);color:var(--denim);outline:none;}
   .sheet-card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 20px 20px;}
   .sheet-card + .sheet-card{margin-top:24px;}
   .sheet-tools{display:flex;gap:8px;margin-bottom:14px;align-items:center;flex-wrap:wrap;}
@@ -58,6 +65,7 @@
   .duration-selection{color:var(--ink-soft);}
   .sheet-wrap{overflow-x:auto;}
   .sheet{border-collapse:collapse;width:100%;min-width:760px;table-layout:fixed;background:#fff;font-family:Arial,sans-serif;}
+  .sheet.single-shift{min-width:560px;}
   .sheet th,.sheet td{border:1px solid #222;height:34px;padding:0;font-size:13px;}
   .sheet td input{width:100%;height:100%;border:0;background:transparent;font:inherit;padding:4px 6px;text-align:center;color:#111;}
   .sheet td input:focus{outline:2px solid var(--denim);outline-offset:-2px;background:#fffef5;}
@@ -159,8 +167,15 @@
     <div class="wrap">
       <div class="page-header">
         <div><h2>Live Seller Tracker</h2><p>Record daily arrival times, hours, and sales.</p></div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <button class="btn btn-primary" id="addTableButton" type="button"><i class="fa-solid fa-plus"></i> Add Another Table</button>
+        <div class="page-actions">
+          <button class="btn btn-outline" id="historyButton" type="button" onclick="window.location.href='live-seller-history.html'"><i class="fa-solid fa-clock-rotate-left"></i> History</button>
+          <div class="table-dropdown" id="tableDropdown">
+            <button class="btn btn-primary" id="addTableButton" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="tableDropdownMenu"><i class="fa-solid fa-plus"></i> Add Another Table <i class="fa-solid fa-chevron-down"></i></button>
+            <div class="table-dropdown-menu" id="tableDropdownMenu" role="menu" hidden>
+              <button class="table-dropdown-option" type="button" role="menuitem" data-table-layout="split">Table 1 MORNING/AFTERNOON</button>
+              <button class="table-dropdown-option" type="button" role="menuitem" data-table-layout="single">Table 2 AFTERNOON ONLY</button>
+            </div>
+          </div>
           <button class="btn btn-outline" type="button" onclick="window.print()"><i class="fa-solid fa-print"></i> Print</button>
         </div>
       </div>
@@ -172,6 +187,7 @@
           <button class="btn btn-outline btn-sm btn-add-divider" type="button"><i class="fa-solid fa-minus"></i> Add Sunday Divider</button>
           <button class="btn btn-primary btn-sm btn-add-absent" type="button"><i class="fa-solid fa-user-xmark"></i> Add Absent Divider</button>
           <button class="btn btn-outline btn-sm btn-add-half-day" type="button"><i class="fa-solid fa-clock"></i> Add Half Day</button>
+          <button class="btn btn-primary btn-sm btn-done" type="button"><i class="fa-solid fa-circle-check"></i> Done</button>
           <button class="btn btn-danger btn-sm btn-remove-table" type="button"><i class="fa-solid fa-trash"></i> Remove Table</button>
           <div class="duration-calculator" aria-label="Duration calculator">
             <strong>Duration calculator:</strong>
@@ -266,8 +282,22 @@ function handleLogout(){
   window.location.href = 'dashboard.html';
 }
 
-function createRecord(id){
-  return { id, order: id - 1, sellerName: '', officialHours: '9:00 AM - 6:00 PM', regularDays: 'Monday - Saturday', submissionSchedule: 'Every Thursday', approvedBy: '', approverRole: 'ADMIN', rows: [] };
+function createRecord(id, profile = id === 1 ? 'april-joy' : id === 2 ? 'pau-belison' : '', layout = profile === 'pau-belison' ? 'single' : 'split'){
+  const isPaul = profile === 'pau-belison';
+  return {
+    id,
+    order: id - 1,
+    profile,
+    layout,
+    sellerName: profile === 'april-joy' ? 'APRIL JOY SAMOY' : isPaul ? 'PAU BELISON' : '',
+    officialHours: isPaul ? '5:00 PM - 8:30 PM' : '9:00 AM - 6:00 PM',
+    regularDays: 'Monday - Saturday',
+    submissionSchedule: 'Every Thursday',
+    approvedBy: profile ? 'ANGELICA G. FAMORCA' : '',
+    approverRole: 'ADMIN',
+    completed: false,
+    rows: [],
+  };
 }
 
 function makeEntry(record){
@@ -277,9 +307,7 @@ function makeEntry(record){
 }
 
 function addDefaultRows(record){
-  record.rows = [makeEntry(record), makeEntry(record), makeEntry(record), makeEntry(record), { id: rowIds.get(record.id), type: 'divider', label: '**** SUNDAY ****' }];
-  rowIds.set(record.id, rowIds.get(record.id) + 1);
-  record.rows.push(makeEntry(record), makeEntry(record), makeEntry(record), makeEntry(record));
+  record.rows = Array.from({length:8}, () => makeEntry(record));
 }
 
 function getSheet(recordId){
@@ -392,7 +420,27 @@ function renderRows(record){
       const halfDayHandle = row.label.toLowerCase().includes('half day')
         ? `<button class="drag-handle" type="button" draggable="true" data-drag-half-day="${row.id}" aria-label="Drag Half Day divider" title="Drag to move"><i class="fa-solid fa-grip-vertical"></i></button>`
         : '';
-      return `<tr class="${dividerClass}" data-row-id="${row.id}"><td colspan="7"><div class="divider-content">${halfDayHandle}<input type="text" data-field="label" aria-label="Section divider label" value="${escapeHtml(row.label)}"></div></td><td class="action-cell"><button class="row-remove" type="button" data-remove-row="${row.id}" aria-label="Remove divider"><i class="fa-solid fa-xmark"></i></button></td></tr>`;
+      const dataColumnCount = record.layout === 'single' ? 5 : 7;
+      return `<tr class="${dividerClass}" data-row-id="${row.id}"><td colspan="${dataColumnCount}"><div class="divider-content">${halfDayHandle}<input type="text" data-field="label" aria-label="Section divider label" value="${escapeHtml(row.label)}"></div></td><td class="action-cell"><button class="row-remove" type="button" data-remove-row="${row.id}" aria-label="Remove divider"><i class="fa-solid fa-xmark"></i></button></td></tr>`;
+    }
+    if(record.layout === 'single'){
+      if(row.type === 'halfDay'){
+        return `<tr data-row-id="${row.id}">
+          <td><input type="date" data-field="date" aria-label="Day"></td>
+          <td colspan="2" class="half-day-label"><button class="drag-handle" type="button" draggable="true" data-drag-half-day="${row.id}" aria-label="Drag Half Day row" title="Drag to move"><i class="fa-solid fa-grip-vertical"></i></button>${escapeHtml(row.label || '**** HALF DAY ****')}</td>
+          <td><input type="text" data-field="duration" aria-label="Duration" placeholder="e.g. 8 hrs"></td>
+          <td><input type="number" min="0" step="0.01" data-field="sales" aria-label="Sales"></td>
+          <td class="action-cell"><button class="row-remove" type="button" data-remove-row="${row.id}" aria-label="Remove row"><i class="fa-solid fa-xmark"></i></button></td>
+        </tr>`;
+      }
+      return `<tr data-row-id="${row.id}">
+        <td><input type="date" data-field="date" aria-label="Day"></td>
+        <td>${renderTimePicker('morningIn', 'Live in')}</td>
+        <td>${renderTimePicker('morningOut', 'Live out')}</td>
+        <td><input type="text" data-field="duration" aria-label="Duration" placeholder="e.g. 3.5 hrs"></td>
+        <td><input type="number" min="0" step="0.01" data-field="sales" aria-label="Sales"></td>
+        <td class="action-cell"><button class="row-remove" type="button" data-remove-row="${row.id}" aria-label="Remove row"><i class="fa-solid fa-xmark"></i></button></td>
+      </tr>`;
     }
     if(row.type === 'halfDay'){
       const halfDayPeriod = row.halfDayPeriod === 'morning' ? 'morning' : 'afternoon';
@@ -437,6 +485,42 @@ function renderRows(record){
       }
     });
 
+  });
+}
+
+function configureSheetLayout(record, sheet){
+  const singleShift = record.layout === 'single';
+  const columnWidths = singleShift
+    ? ['20%','20%','20%','20%','20%','38px']
+    : ['12%','12%','12%','12%','12%','20%','18%','38px'];
+  sheet.querySelector('.sheet').classList.toggle('single-shift', singleShift);
+  sheet.querySelector('.sheet colgroup').innerHTML = columnWidths.map((width, index) =>
+    `<col${index === columnWidths.length - 1 ? ' class="action-col"' : ''} style="width:${width}">`
+  ).join('');
+  const columnCount = columnWidths.length;
+  const headers = singleShift
+    ? `<tr><th colspan="${columnCount}" class="title-cell">DAILY TIME RECORD</th></tr>
+      <tr><td colspan="${columnCount}" class="seller-cell"><input data-record-field="sellerName" type="text" aria-label="Seller name" placeholder="SELLER NAME"></td></tr>
+      <tr><td colspan="3" class="info-label">Official hours of arrival</td><td colspan="3" class="info-value"><input data-record-field="officialHours" type="text" aria-label="Official hours of arrival"></td></tr>
+      <tr><td colspan="${columnCount}" class="section-label">Submission: <input data-record-field="submissionSchedule" type="text" aria-label="Submission schedule" style="width:55%;height:28px;border:0;background:transparent;text-align:center;text-transform:uppercase;font:inherit;"></td></tr>
+      <tr><th class="column-heading head-date">Day</th><th class="column-heading head-in">Live in</th><th class="column-heading head-out">Live out</th><th class="column-heading head-duration">Duration</th><th class="column-heading head-sales">Sales</th><th class="action-cell"></th></tr>`
+    : `<tr><th colspan="${columnCount}" class="title-cell">DAILY TIME RECORD</th></tr>
+      <tr><td colspan="${columnCount}" class="seller-cell"><input data-record-field="sellerName" type="text" aria-label="Seller name" placeholder="SELLER NAME"></td></tr>
+      <tr><td colspan="2" class="info-label">Official hours of arrival</td><td colspan="3" class="info-value"><input data-record-field="officialHours" type="text" aria-label="Official hours of arrival"></td><td class="info-label">Regular days</td><td colspan="2" class="info-value"><input data-record-field="regularDays" type="text" aria-label="Regular days"></td></tr>
+      <tr><td colspan="${columnCount}" class="section-label">Submission: <input data-record-field="submissionSchedule" type="text" aria-label="Submission schedule" style="width:55%;height:28px;border:0;background:transparent;text-align:center;text-transform:uppercase;font:inherit;"></td></tr>
+      <tr><th rowspan="2" class="column-heading head-date">Date</th><th colspan="2" class="group-heading" data-half-day-period="morning">Morning</th><th colspan="2" class="group-heading" data-half-day-period="afternoon">Afternoon</th><th rowspan="2" class="column-heading head-duration">Duration</th><th rowspan="2" class="column-heading head-sales">Sales</th><th rowspan="2" class="action-cell"></th></tr>
+      <tr><th class="column-heading head-in" data-half-day-period="morning">Live in</th><th class="column-heading head-out" data-half-day-period="morning">Live out</th><th class="column-heading head-in" data-half-day-period="afternoon">Live in</th><th class="column-heading head-out" data-half-day-period="afternoon">Live out</th></tr>`;
+  sheet.querySelector('.sheet thead').innerHTML = headers;
+  sheet.querySelector('.sheet tfoot').innerHTML = `<tr><td colspan="${columnCount}" class="seller-cell"><input data-record-field="approvedBy" type="text" aria-label="Approved by" placeholder="APPROVED BY"></td></tr>
+    <tr><td colspan="${columnCount}" class="seller-cell"><input data-record-field="approverRole" type="text" aria-label="Approver role"></td></tr>`;
+}
+
+function normalizedRecordRows(rows){
+  if(!Array.isArray(rows)) return [];
+  return rows.map(row => {
+    if(row.type === 'halfDay') return { ...row, halfDayPeriod: row.halfDayPeriod === 'morning' ? 'morning' : 'afternoon' };
+    if(row.type !== 'divider' || typeof row.label !== 'string' || !row.label.toLowerCase().includes('half day')) return row;
+    return { ...row, type: 'halfDay', halfDayPeriod: 'afternoon', date: '', morningIn: '', morningOut: '', afternoonIn: '', afternoonOut: '', duration: '', sales: '' };
   });
 }
 
@@ -752,6 +836,7 @@ document.getElementById('tables').addEventListener('click', event => {
   if(event.target.closest('.btn-add-divider')) addDivider(record.id, '**** SUNDAY ****');
   if(event.target.closest('.btn-add-absent')) addDivider(record.id, '**** ABSENT ****');
   if(event.target.closest('.btn-add-half-day')) addHalfDayRow(record.id);
+  if(event.target.closest('.btn-done')) completeTable(record.id);
   if(event.target.closest('.btn-remove-table')) removeTable(record.id);
   if(event.target.closest('.btn-add-duration')) addDurationToCalculator(record.id, sheet);
   if(event.target.closest('.btn-apply-duration')) applyDurationToSelectedRow(record);
@@ -765,7 +850,12 @@ document.getElementById('tables').addEventListener('click', event => {
   }
 });
 
-function addTable(){
+function closeTableDropdown(){
+  document.getElementById('tableDropdownMenu').hidden = true;
+  document.getElementById('addTableButton').setAttribute('aria-expanded', 'false');
+}
+
+function addTable(layout){
   const existingIds = [
     ...records.map(record => Number(record.id)),
     ...[...document.querySelectorAll('.sheet-card')].map(sheet => Number(sheet.dataset.recordId)),
@@ -774,16 +864,14 @@ function addTable(){
   nextRecordId = id + 1;
   const sheet = sellerTrackerTemplate.cloneNode(true);
   sheet.dataset.recordId = id;
-  sheet.querySelector('[data-record-field="sellerName"]').value = '';
-  sheet.querySelector('[data-record-field="officialHours"]').value = '9:00 AM - 6:00 PM';
-  sheet.querySelector('[data-record-field="regularDays"]').value = 'Monday - Saturday';
-  sheet.querySelector('[data-record-field="submissionSchedule"]').value = 'Every Thursday';
-  sheet.querySelector('[data-record-field="approvedBy"]').value = '';
-  sheet.querySelector('[data-record-field="approverRole"]').value = 'ADMIN';
+  const record = createRecord(id, '', layout === 'single' ? 'single' : 'split');
+  addDefaultRows(record);
+  configureSheetLayout(record, sheet);
+  sheet.querySelectorAll('[data-record-field]').forEach(input => {
+    input.value = record[input.dataset.recordField] ?? '';
+  });
   sheet.querySelector('[data-record-rows]').innerHTML = '';
   document.getElementById('tables').appendChild(sheet);
-  const record = createRecord(id);
-  addDefaultRows(record);
   records.push(record);
   records.forEach((item, index) => {
     item.order = index;
@@ -793,6 +881,33 @@ function addTable(){
   renderRows(record);
   showFlash(`Added table ${id}.`, false);
   sheet.querySelector('[data-record-field="sellerName"]').focus({preventScroll:true});
+}
+
+async function completeTable(recordId){
+  const record = records.find(item => item.id === recordId);
+  if(!record) return;
+  const sheet = getSheet(recordId);
+  collectRecord(record);
+  if(!confirm(`Mark ${record.sellerName || 'this time record'} as done? It will move to read-only history.`)) return;
+
+  clearTimeout(saveTimers.get(recordId));
+  const previousCompletedAt = record.completedAt;
+  record.completed = true;
+  record.completedAt = new Date().toISOString();
+  const snapshot = JSON.parse(JSON.stringify(record));
+  saveQueue = saveQueue.then(() => saveRow(TABLE_SELLER_TRACKER, snapshot));
+  await saveQueue;
+  if(document.getElementById('saveIndicator').classList.contains('error')){
+    record.completed = false;
+    if(previousCompletedAt === undefined) delete record.completedAt;
+    else record.completedAt = previousCompletedAt;
+    return;
+  }
+
+  records = records.filter(item => item.id !== recordId);
+  selectedRows.delete(recordId);
+  sheet.remove();
+  showFlash(`${record.sellerName || 'Time record'} saved to completed history.`, false);
 }
 
 async function removeTable(recordId){
@@ -806,7 +921,7 @@ async function removeTable(recordId){
   records = records.filter(item => item.id !== recordId);
   selectedRows.delete(recordId);
   getSheet(recordId).remove();
-  const deletionMarker = { id: recordId, deleted: true };
+  const deletionMarker = { id: recordId, deleted: true, profile: record.profile };
   saveQueue = saveQueue.then(() => saveRow(TABLE_SELLER_TRACKER, deletionMarker));
 }
 
@@ -815,8 +930,16 @@ async function initializeTracker(){
   try{
     const loaded = await loadTable(TABLE_SELLER_TRACKER) || [];
     const byId = new Map(loaded.map(item => [Number(item.id), item]));
+    const profileForRecord = item => {
+      if(item.profile === 'april-joy' || item.profile === 'pau-belison') return item.profile;
+      if(Number(item.id) === 1 || String(item.sellerName || '').trim().toUpperCase() === 'APRIL JOY SAMOY') return 'april-joy';
+      if(Number(item.id) === 2 || String(item.sellerName || '').trim().toUpperCase() === 'PAU BELISON') return 'pau-belison';
+      return '';
+    };
+    const existingProfiles = new Set(loaded.filter(item => !item.deleted).map(profileForRecord).filter(Boolean));
+    const deletedProfiles = new Set(loaded.filter(item => item.deleted && (item.profile === 'april-joy' || item.profile === 'pau-belison')).map(item => item.profile));
     const recordIds = [...new Set([1, 2, ...byId.keys()])]
-      .filter(id => !byId.get(id)?.deleted)
+      .filter(id => !byId.get(id)?.deleted && !byId.get(id)?.completed)
       .sort((a, b) => {
         const orderA = byId.get(a)?.order;
         const orderB = byId.get(b)?.order;
@@ -825,6 +948,25 @@ async function initializeTracker(){
         if(Number.isFinite(orderB)) return 1;
         return a - b;
       });
+    const seededRecords = [];
+    let seedId = Math.max(0, ...byId.keys()) + 1;
+    ['april-joy', 'pau-belison'].forEach((profile, index) => {
+      if(existingProfiles.has(profile) || deletedProfiles.has(profile)) return;
+      const record = createRecord(seedId++, profile);
+      record.order = -2 + index;
+      addDefaultRows(record);
+      byId.set(record.id, record);
+      recordIds.push(record.id);
+      seededRecords.push(record);
+    });
+    recordIds.sort((a, b) => {
+      const orderA = byId.get(a)?.order;
+      const orderB = byId.get(b)?.order;
+      if(Number.isFinite(orderA) && Number.isFinite(orderB)) return orderA - orderB || a - b;
+      if(Number.isFinite(orderA)) return -1;
+      if(Number.isFinite(orderB)) return 1;
+      return a - b;
+    });
     recordIds.forEach(id => {
       if(!getSheet(id)){
         const sheet = sellerTrackerTemplate.cloneNode(true);
@@ -837,21 +979,18 @@ async function initializeTracker(){
     });
     records = recordIds.map(id => {
       const saved = byId.get(id);
-      const rows = Array.isArray(saved?.rows) ? saved.rows.map(row => {
-        if(row.type === 'halfDay') return { ...row, halfDayPeriod: row.halfDayPeriod === 'morning' ? 'morning' : 'afternoon' };
-        if(row.type !== 'divider' || typeof row.label !== 'string' || !row.label.toLowerCase().includes('half day')) return row;
-        return { ...row, type: 'halfDay', halfDayPeriod: 'afternoon', date: '', morningIn: '', morningOut: '', afternoonIn: '', afternoonOut: '', duration: '', sales: '' };
-      }) : [];
+      const rows = normalizedRecordRows(saved?.rows);
       const record = saved ? { ...createRecord(id), ...saved, rows } : createRecord(id);
+      if(saved && (saved.profile === 'pau-belison' || id === 2) && !saved.layout && !rows.some(row => row.afternoonIn || row.afternoonOut)){
+        record.layout = 'single';
+      }
       const maxRowId = record.rows.reduce((highest, row) => Math.max(highest, Number(row.id) || 0), 0);
       rowIds.set(id, maxRowId + 1);
       if(!saved){
         addDefaultRows(record);
-        const sheet = getSheet(id);
-        sheet.querySelector('[data-record-field="sellerName"]').value = '';
-        sheet.querySelector('[data-record-field="approvedBy"]').value = '';
       }
       const sheet = getSheet(id);
+      configureSheetLayout(record, sheet);
       sheet.querySelectorAll('[data-record-field]').forEach(input => {
         input.value = record[input.dataset.recordField] ?? '';
       });
@@ -862,6 +1001,9 @@ async function initializeTracker(){
     records.forEach(record => document.getElementById('tables').appendChild(getSheet(record.id)));
     currentTableId = recordIds[0] ?? null;
     nextRecordId = Math.max(0, ...recordIds, ...byId.keys()) + 1;
+    for(const record of seededRecords){
+      await saveRow(TABLE_SELLER_TRACKER, record);
+    }
   }catch(error){
     console.error('Failed to load live seller tracker:', error);
     setSaveIndicator('error');
@@ -870,7 +1012,24 @@ async function initializeTracker(){
   }
 }
 
-document.getElementById('addTableButton').addEventListener('click', addTable);
+document.getElementById('addTableButton').addEventListener('click', () => {
+  const menu = document.getElementById('tableDropdownMenu');
+  menu.hidden = !menu.hidden;
+  document.getElementById('addTableButton').setAttribute('aria-expanded', String(!menu.hidden));
+});
+document.getElementById('tableDropdownMenu').addEventListener('click', event => {
+  const option = event.target.closest('[data-table-layout]');
+  if(!option) return;
+  closeTableDropdown();
+  addTable(option.dataset.tableLayout);
+});
+document.addEventListener('click', event => {
+  if(!event.target.closest('#tableDropdown')) closeTableDropdown();
+});
+document.addEventListener('keydown', event => {
+  if(event.key !== 'Escape') return;
+  closeTableDropdown();
+});
 initializeTracker();
 </script>
 </body>
