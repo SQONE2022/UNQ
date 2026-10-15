@@ -851,7 +851,8 @@ function renderTable(){
     const cells = SIZES.map(s => {
       const qty = availableStock(p, s);
       const cls = stockLevelBadgeClass(qty);
-      const price = p.prices?.[s] ?? p.price ?? 0;
+      const storedPrice = Number(p.prices?.[s] ?? p.price ?? 0);
+      const price = Number.isFinite(storedPrice) ? storedPrice : 0;
       return `<td style="text-align:center;"><span class="badge ${cls}">${qty}</span><br><span class="price-note">₱${price.toFixed(2)}</span></td>`;
     }).join('');
 
