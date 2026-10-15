@@ -1,1 +1,457 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Stockline - Stocks</title><style>html,body,iframe{margin:0;width:100%;height:100%;border:0;display:block}</style></head><body><iframe src="web.html?view=stocks" title="Stocks"></iframe></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stocks — Stockline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+  :root{--paper:#F3F4F1;--panel:#fff;--ink:#1B2430;--ink-soft:#5B6472;--line:#E1E4E0;--denim:#2F5D9A;--denim-dark:#234876;--green:#3F7D4F;--green-bg:#E7F2E9;--amber:#A8710A;--amber-bg:#FBF0DC;--red:#B4423A;--red-bg:#FBE9E7}
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100vh;background:var(--paper);color:var(--ink);font-family:Inter,sans-serif}
+  h1,h2,h3{margin:0;font-family:'Space Grotesk',sans-serif}
+  .app-shell{display:flex;min-height:100vh}
+  .sidebar{width:216px;flex-shrink:0;padding:18px 12px;background:var(--panel);border-right:1px solid var(--line);overflow:hidden;transition:width .18s ease,padding .18s ease}
+  .sidebar.collapsed{width:0;padding-left:0;padding-right:0;border:0}
+  .sidebar-brand{display:flex;align-items:center;gap:10px;padding:2px 8px 20px}
+  .sidebar-brand span{font-family:'Space Grotesk',sans-serif;font-weight:700;white-space:nowrap}
+  .login-mark{display:flex;width:40px;height:40px;align-items:center;justify-content:center;border-radius:8px;background:var(--denim);color:#fff}
+  .nav-label{margin:0 0 6px;padding:0 10px;color:var(--ink-soft);font-size:.68rem;font-weight:700;letter-spacing:.04em}
+  .nav-item{display:flex;width:100%;align-items:center;gap:10px;margin-bottom:2px;padding:9px 10px;border:0;border-radius:7px;background:none;color:var(--ink-soft);font:600 .86rem Inter,sans-serif;text-align:left;white-space:nowrap;cursor:pointer}
+  .nav-item i{width:16px;text-align:center}
+  .nav-item:hover{background:var(--paper);color:var(--ink)}
+  .nav-item.active{background:var(--denim);color:#fff}
+  .main-area{flex:1;min-width:0}
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;border-bottom:1px solid var(--line);background:var(--panel)}
+  .hamburger{width:34px;height:34px;border:0;border-radius:7px;background:none;color:var(--ink);font-size:1rem;cursor:pointer}
+  .hamburger:hover{background:var(--paper)}
+  .topbar-user{display:flex;align-items:center;gap:10px;color:var(--ink-soft);font-size:.85rem}
+  .topbar-user b{color:var(--ink)}
+  .save-indicator{font-size:.76rem}
+  .save-indicator.saved{color:var(--green)}
+  .save-indicator.saving{color:var(--denim)}
+  .save-indicator.error{color:var(--red)}
+  .wrap{max-width:1280px;margin:0 auto;padding:28px}
+  .page-header{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:20px}
+  .page-header h1{font-size:1.5rem}
+  .page-header p{margin:6px 0 0;color:var(--ink-soft);font-size:.88rem}
+  .btn{display:inline-flex;min-height:38px;align-items:center;justify-content:center;gap:8px;padding:8px 13px;border:1px solid transparent;border-radius:7px;font:600 .84rem Inter,sans-serif;text-decoration:none;cursor:pointer}
+  .btn:disabled{opacity:.6;cursor:not-allowed}
+  .btn-primary{background:var(--denim);color:#fff}
+  .btn-primary:hover{background:var(--denim-dark)}
+  .btn-outline{border-color:var(--line);background:#fff;color:var(--ink)}
+  .btn-outline:hover{border-color:var(--denim);color:var(--denim)}
+  .btn-danger{background:var(--red-bg);color:var(--red)}
+  .btn-sm{min-height:32px;padding:6px 9px;font-size:.78rem}
+  .card{overflow:hidden;margin-bottom:20px;border:1px solid var(--line);border-radius:10px;background:var(--panel)}
+  .card-header{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:15px 18px;border-bottom:1px solid var(--line)}
+  .card-header h2{font-size:1.02rem}
+  .table-wrap{overflow-x:auto}
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:10px 12px;border-bottom:1px solid var(--line);font-size:.82rem;text-align:left}
+  th{background:#f7f8f6;color:var(--ink-soft);font-size:.7rem;letter-spacing:.03em;text-transform:uppercase;white-space:nowrap}
+  tbody tr:last-child td{border-bottom:0}
+  tbody tr:hover{background:#fafaf9}
+  .sku{font-family:'JetBrains Mono',monospace;font-size:.78rem;color:var(--ink-soft)}
+  .badge{display:inline-block;min-width:26px;padding:3px 8px;border-radius:6px;font:700 .78rem 'JetBrains Mono',monospace}
+  .badge-green{background:var(--green-bg);color:var(--green)}
+  .badge-yellow{background:var(--amber-bg);color:var(--amber)}
+  .badge-red{background:var(--red-bg);color:var(--red)}
+  .price-note{color:var(--ink-soft);font-size:.72rem}
+  .legend{margin:0;padding:12px 18px;color:var(--ink-soft);font-size:.78rem}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+  .input-wrap{position:relative;width:min(280px,100%)}
+  .input-wrap i{position:absolute;top:50%;left:11px;transform:translateY(-50%);color:var(--ink-soft);font-size:.78rem}
+  .input-wrap input{width:100%;min-height:38px;padding:8px 10px 8px 30px;border:1px solid var(--line);border-radius:7px;font:inherit}
+  .input-wrap input:focus,.quantity-input:focus,.form-group input:focus{outline:2px solid var(--denim);outline-offset:1px}
+  .quantity-input{display:block;width:100%;min-width:48px;padding:6px 3px;border:1px solid var(--line);border-radius:5px;font:inherit;text-align:center}
+  .quantity-table{min-width:800px;table-layout:fixed}
+  .quantity-table th:first-child,.quantity-table td:first-child{width:11%}
+  .quantity-table th:nth-child(2),.quantity-table td:nth-child(2){width:16%}
+  .quantity-table th:last-child,.quantity-table td:last-child{width:8%}
+  .row-actions{display:flex;justify-content:flex-end;gap:6px}
+  .empty{padding:26px 18px;color:var(--ink-soft);text-align:center;font-size:.86rem}
+  .flash{display:none;margin-bottom:16px;padding:10px 13px;border-radius:7px;font-size:.84rem}
+  .flash.success{display:block;background:var(--green-bg);color:var(--green)}
+  .flash.error{display:block;background:var(--red-bg);color:var(--red)}
+  .modal-overlay{position:fixed;z-index:20;inset:0;display:none;align-items:center;justify-content:center;padding:20px;background:#1b24306b}
+  .modal-overlay.open{display:flex}
+  .modal-box{position:relative;width:100%;max-width:720px;max-height:90vh;overflow-y:auto;padding:24px;border-radius:12px;background:#fff;box-shadow:0 12px 32px #1b24302e}
+  .modal-box h2{margin-bottom:18px;font-size:1.12rem}
+  .modal-close{position:absolute;top:16px;right:16px;width:30px;height:30px;border:0;border-radius:6px;background:transparent;color:var(--ink-soft);font-size:1rem;cursor:pointer}
+  .form-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+  .form-group{margin-bottom:14px}
+  .form-group label,.size-grid label{display:block;margin-bottom:6px;font-size:.78rem;font-weight:600}
+  .form-group input{width:100%;min-height:38px;padding:8px 10px;border:1px solid var(--line);border-radius:6px;font:inherit}
+  .size-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+  .size-grid input{width:100%;min-height:36px;padding:6px 8px;border:1px solid var(--line);border-radius:6px;font:inherit}
+  .modal-actions{display:flex;justify-content:flex-end;margin-top:16px}
+  @media(max-width:900px){.sidebar{position:fixed;z-index:5;top:0;bottom:0;left:0;width:240px;box-shadow:2px 0 16px #1b24302e}.sidebar.collapsed{width:0;box-shadow:none}.wrap{padding:20px 16px}.topbar{padding:12px 16px}}
+  @media(max-width:620px){.wrap{padding:16px 12px}.card-header{align-items:flex-start;flex-direction:column}.input-wrap{width:100%}.form-row{grid-template-columns:1fr}.size-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  @media(max-width:520px){.topbar{padding:12px 14px}.user-label{display:none}.topbar-user{gap:6px}.page-header h1{font-size:1.3rem}}
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <nav class="sidebar" id="sidebar" aria-label="Main menu">
+    <div class="sidebar-brand"><div class="login-mark"><i class="fa-solid fa-box"></i></div><span>Admin Dashboard</span></div>
+    <p class="nav-label">Menu</p>
+    <button class="nav-item" onclick="window.location.href='dashboard.html'"><i class="fa-solid fa-gauge-high"></i> Dashboard</button>
+    <button class="nav-item active" aria-current="page"><i class="fa-solid fa-ruler"></i> Stocks</button>
+    <button class="nav-item" onclick="window.location.href='joborder.html'"><i class="fa-solid fa-clipboard-list"></i> Job Order Tracker</button>
+    <button class="nav-item" onclick="window.location.href='orders.html'"><i class="fa-solid fa-boxes-stacked"></i> Orders</button>
+    <button class="nav-item" onclick="window.location.href='news.html'"><i class="fa-solid fa-newspaper"></i> News</button>
+    <button class="nav-item" onclick="window.location.href='operation-records.html'"><i class="fa-solid fa-clipboard-check"></i> Operation Records</button>
+    <button class="nav-item" onclick="window.location.href='live-seller-tracker.html'"><i class="fa-solid fa-chart-line"></i> Live Seller Tracker</button>
+    <button class="nav-item" onclick="window.location.href='tiktok-calendar.html'"><i class="fa-brands fa-tiktok"></i> TikTok Calendar</button>
+    <button class="nav-item" onclick="window.location.href='sewer-record.html'"><i class="fa-solid fa-user-gear"></i> Sewer Record</button>
+  </nav>
+  <main class="main-area">
+    <header class="topbar">
+      <button class="hamburger" onclick="toggleSidebar()" aria-label="Toggle menu"><i class="fa-solid fa-bars"></i></button>
+      <div class="topbar-user"><span class="save-indicator" id="saveIndicator" aria-live="polite"></span><span class="user-label">Signed in as</span> <b id="whoami">admin</b><button class="btn btn-outline btn-sm" type="button" onclick="handleLogout()"><i class="fa-solid fa-arrow-right-from-bracket"></i> Log out</button></div>
+    </header>
+    <div class="wrap">
+      <div class="page-header">
+        <div><h1>Stocks Overview</h1><p>Manage product inventory, reserved quantities, and available stock by size.</p></div>
+        <button class="btn btn-primary" type="button" id="addProductButton"><i class="fa-solid fa-plus"></i> Add Product</button>
+      </div>
+      <div class="flash" id="flash" role="status" aria-live="polite"></div>
+      <section class="card" aria-labelledby="stockPerProductHeading">
+        <header class="card-header">
+          <h2 id="stockPerProductHeading"><i class="fa-solid fa-ruler" style="color:var(--denim)"></i> Stocks per Product (<span id="productCount">0</span> products)</h2>
+          <label class="input-wrap"><span class="sr-only">Search SKU or name</span><i class="fa-solid fa-magnifying-glass"></i><input type="search" id="searchInput" placeholder="Search SKU or name"></label>
+        </header>
+        <div class="table-wrap"><table>
+          <thead><tr><th>SKU</th><th>Product</th><th style="text-align:center">XS</th><th style="text-align:center">S</th><th style="text-align:center">M</th><th style="text-align:center">L</th><th style="text-align:center">XL</th><th style="text-align:center">2XL</th><th style="text-align:center">3XL</th><th style="text-align:center">Other</th><th style="text-align:center">Total</th><th></th></tr></thead>
+          <tbody id="tableBody"></tbody>
+        </table></div>
+        <p class="legend">Available stock per size = real stock − reserved stock − non-cancelled/non-returned order quantities across all dates.</p>
+        <p class="legend"><span class="badge badge-red">0–10</span> &nbsp; <span class="badge badge-yellow">11–20</span> &nbsp; <span class="badge badge-green">21+</span> available units</p>
+      </section>
+      <section class="card" aria-labelledby="realStockHeading">
+        <header class="card-header"><h2 id="realStockHeading"><i class="fa-solid fa-boxes-stacked" style="color:var(--denim)"></i> Real Stock by Size</h2></header>
+        <div class="table-wrap"><table class="quantity-table"><thead><tr><th>SKU</th><th>Product</th><th>XS</th><th>S</th><th>M</th><th>L</th><th>XL</th><th>2XL</th><th>3XL</th><th>Other</th><th>Total</th></tr></thead><tbody id="realStockBody"></tbody></table></div>
+        <p class="legend">Total physical stock on hand, including reserved units. Edit these quantities to update real stock.</p>
+      </section>
+      <section class="card" aria-labelledby="reservedStockHeading">
+        <header class="card-header"><h2 id="reservedStockHeading"><i class="fa-solid fa-box-open" style="color:var(--denim)"></i> Reserved Stock by Size</h2></header>
+        <div class="table-wrap"><table class="quantity-table"><thead><tr><th>SKU</th><th>Product</th><th>XS</th><th>S</th><th>M</th><th>L</th><th>XL</th><th>2XL</th><th>3XL</th><th>Other</th><th>Total</th></tr></thead><tbody id="reservedStockBody"></tbody></table></div>
+        <p class="legend">Reserved quantities are subtracted from real stock, along with sold orders, to calculate available stock.</p>
+      </section>
+    </div>
+  </main>
+</div>
+
+<div class="modal-overlay" id="productModal" role="dialog" aria-modal="true" aria-labelledby="productModalTitle">
+  <div class="modal-box">
+    <button class="modal-close" id="closeProductModal" type="button" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+    <h2 id="productModalTitle">Add Product</h2>
+    <form id="productForm">
+      <input type="hidden" id="productId">
+      <div class="form-row">
+        <div class="form-group"><label for="productSku">SKU</label><input type="text" id="productSku" required></div>
+        <div class="form-group"><label for="productName">Product name</label><input type="text" id="productName" required></div>
+      </div>
+      <div class="form-group"><label>Price per size (₱)</label><div class="size-grid" id="priceGrid"></div></div>
+      <div class="form-group"><label>Real stock per size</label><div class="size-grid" id="sizeGrid"></div></div>
+      <div class="modal-actions"><button class="btn btn-primary" type="submit"><i class="fa-solid fa-check"></i> Save Product</button></div>
+    </form>
+  </div>
+</div>
+<script src="database.js"></script>
+<script>
+const STOCK_SIZES = ['XS','S','M','L','XL','2XL','3XL','Other'];
+let products = [];
+let soldUnitsBySku = new Map();
+let nextProductId = 1;
+
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('collapsed');
+}
+
+function handleLogout(){
+  sessionStorage.removeItem('stockline-authenticated');
+  window.location.href = 'dashboard.html';
+}
+
+function setSaveIndicator(state){
+  const indicator = document.getElementById('saveIndicator');
+  indicator.className = `save-indicator ${state}`;
+  indicator.textContent = state === 'saving' ? 'Saving...' : state === 'saved' ? 'Saved' : state === 'error' ? 'Save failed' : '';
+}
+
+function showFlash(message, isError = false){
+  const flash = document.getElementById('flash');
+  flash.className = `flash ${isError ? 'error' : 'success'}`;
+  flash.textContent = message;
+}
+
+function escapeHtml(value){
+  return String(value ?? '').replace(/[&<>'"]/g, character => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[character]));
+}
+
+function stockSkuKey(sku){
+  return String(sku || '').trim().toLocaleLowerCase();
+}
+
+function stockSizeFromVariation(variation){
+  const normalized = String(variation || '').toUpperCase().replace(/XXXL/g, '3XL').replace(/XXL/g, '2XL');
+  const match = normalized.match(/(?:^|[^A-Z0-9])(2XL|3XL|XS|XL|S|M|L)(?=$|[^A-Z0-9])/);
+  return match ? match[1] : 'Other';
+}
+
+function salesOrderIsExcluded(order){
+  const category = String(order.category || '').trim().toUpperCase();
+  if(['CANCELLED','RETURNED BY CUSTOMER','AFFILIATE','SHOPEE'].includes(category)){
+    return category === 'CANCELLED' || category === 'RETURNED BY CUSTOMER';
+  }
+  return /\b(cancelled|canceled|void|return|returned|refund|refunded)\b/.test(String(order.status || '').toLowerCase().trim());
+}
+
+async function loadOrderSalesForStock(){
+  const [orders, manualProducts] = await Promise.all([
+    loadTable('sellerorders'),
+    loadTable('sellerorderproducts'),
+  ]);
+  const deductions = new Map();
+  const addDeduction = (sku, size, quantity) => {
+    const key = stockSkuKey(sku);
+    if(!key || !STOCK_SIZES.includes(size)) return;
+    if(!deductions.has(key)) deductions.set(key, Object.fromEntries(STOCK_SIZES.map(itemSize => [itemSize, 0])));
+    deductions.get(key)[size] += Math.max(0, Number(quantity) || 0);
+  };
+  (orders || []).filter(order => !salesOrderIsExcluded(order)).forEach(order => {
+    addDeduction(order.sku, stockSizeFromVariation(order.variation), order.quantity);
+  });
+  (manualProducts || []).forEach(product => {
+    STOCK_SIZES.forEach(size => addDeduction(product.sku, size, product.sizes?.[size]));
+  });
+  soldUnitsBySku = deductions;
+}
+
+function availableStock(product, size){
+  const real = Number(product.sizes?.[size]) || 0;
+  const reserved = Math.max(0, Number(product.reservedSizes?.[size]) || 0);
+  const sold = soldUnitsBySku.get(stockSkuKey(product.sku))?.[size] || 0;
+  return Math.max(0, real - reserved - sold);
+}
+
+function stockLevelBadgeClass(quantity){
+  if(quantity <= 10) return 'badge-red';
+  if(quantity <= 20) return 'badge-yellow';
+  return 'badge-green';
+}
+
+function renderTable(){
+  const query = document.getElementById('searchInput').value.trim().toLowerCase();
+  const filtered = products.filter(product =>
+    !query || String(product.name || '').toLowerCase().includes(query) || String(product.sku || '').toLowerCase().includes(query)
+  ).sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')));
+  document.getElementById('productCount').textContent = filtered.length;
+  const body = document.getElementById('tableBody');
+  if(!filtered.length){
+    body.innerHTML = `<tr><td colspan="${STOCK_SIZES.length + 4}" class="empty">${products.length ? 'No products match your search.' : 'No products yet. Add a product to get started.'}</td></tr>`;
+  }else{
+    body.innerHTML = filtered.map(product => {
+      const total = STOCK_SIZES.reduce((sum, size) => sum + availableStock(product, size), 0);
+      const cells = STOCK_SIZES.map(size => {
+        const quantity = availableStock(product, size);
+        const storedPrice = Number(product.prices?.[size] ?? product.price ?? 0);
+        const price = Number.isFinite(storedPrice) ? storedPrice : 0;
+        return `<td style="text-align:center"><span class="badge ${stockLevelBadgeClass(quantity)}">${quantity}</span><br><span class="price-note">₱${price.toFixed(2)}</span></td>`;
+      }).join('');
+      return `<tr>
+        <td class="sku">${escapeHtml(product.sku)}</td><td>${escapeHtml(product.name)}</td>${cells}
+        <td style="text-align:center"><span class="badge ${stockLevelBadgeClass(total)}">${total}</span></td>
+        <td><div class="row-actions"><button class="btn btn-outline btn-sm" type="button" data-edit-product="${product.id}" aria-label="Edit ${escapeHtml(product.name)}"><i class="fa-solid fa-pen"></i></button><button class="btn btn-danger btn-sm" type="button" data-delete-product="${product.id}" aria-label="Delete ${escapeHtml(product.name)}"><i class="fa-solid fa-trash"></i></button></div></td>
+      </tr>`;
+    }).join('');
+  }
+  renderQuantityTables(filtered);
+}
+
+function renderQuantityTables(filteredProducts){
+  const renderRows = (field, bodyId) => {
+    const body = document.getElementById(bodyId);
+    if(!filteredProducts.length){
+      body.innerHTML = `<tr><td colspan="${STOCK_SIZES.length + 3}" class="empty">No products to display.</td></tr>`;
+      return;
+    }
+    body.innerHTML = [...filteredProducts].sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''))).map(product => {
+      const sizes = field === 'real' ? product.sizes : product.reservedSizes;
+      const values = STOCK_SIZES.map(size => Math.max(0, Number(sizes?.[size]) || 0));
+      const total = values.reduce((sum, quantity) => sum + quantity, 0);
+      return `<tr>
+        <td class="sku">${escapeHtml(product.sku)}</td><td>${escapeHtml(product.name)}</td>
+        ${STOCK_SIZES.map((size, index) => `<td><input class="quantity-input" type="number" min="0" step="1" value="${values[index]}" data-stock-product="${product.id}" data-stock-field="${field}" data-stock-size="${size}" aria-label="${field === 'real' ? 'Real' : 'Reserved'} stock for ${escapeHtml(product.sku)} size ${size}"></td>`).join('')}
+        <td style="text-align:center;font-weight:800">${total}</td>
+      </tr>`;
+    }).join('');
+  };
+  renderRows('real', 'realStockBody');
+  renderRows('reserved', 'reservedStockBody');
+}
+
+function buildSizeInputs(containerId, values = {}, isPrice = false){
+  document.getElementById(containerId).innerHTML = STOCK_SIZES.map(size =>
+    `<div><label for="${containerId}-${size}">${size}</label><input id="${containerId}-${size}" type="number" min="0" step="${isPrice ? '0.01' : '1'}" value="${Number(values[size]) || 0}" data-size="${size}"></div>`
+  ).join('');
+}
+
+function readSizeInputs(containerId){
+  return Object.fromEntries([...document.querySelectorAll(`#${containerId} [data-size]`)].map(input => [
+    input.dataset.size,
+    Number(input.value) || 0,
+  ]));
+}
+
+function openProductModal(product = null){
+  const form = document.getElementById('productForm');
+  form.reset();
+  document.getElementById('productId').value = product?.id ?? '';
+  document.getElementById('productSku').value = product?.sku ?? '';
+  document.getElementById('productName').value = product?.name ?? '';
+  buildSizeInputs('priceGrid', product?.prices || Object.fromEntries(STOCK_SIZES.map(size => [size, product?.price || 0])), true);
+  buildSizeInputs('sizeGrid', product?.sizes || {});
+  document.getElementById('productModalTitle').textContent = product ? 'Edit Product' : 'Add Product';
+  document.getElementById('productModal').classList.add('open');
+  document.getElementById('productSku').focus();
+}
+
+async function saveProduct(event){
+  event.preventDefault();
+  const id = Number(document.getElementById('productId').value);
+  const existing = products.find(product => Number(product.id) === id);
+  const product = existing || {
+    id:nextProductId++,
+    reservedSizes:Object.fromEntries(STOCK_SIZES.map(size => [size, 0])),
+  };
+  product.sku = document.getElementById('productSku').value.trim();
+  product.name = document.getElementById('productName').value.trim();
+  product.prices = readSizeInputs('priceGrid');
+  product.sizes = readSizeInputs('sizeGrid');
+  if(!existing) products.push(product);
+  renderTable();
+  await saveRow(TABLE_PRODUCTS, product);
+  if(document.getElementById('saveIndicator').classList.contains('error')) return;
+  document.getElementById('productModal').classList.remove('open');
+  showFlash(existing ? 'Product updated.' : 'Product added.');
+}
+
+async function changeStockQuantity(input){
+  const product = products.find(item => Number(item.id) === Number(input.dataset.stockProduct));
+  const quantity = input.valueAsNumber;
+  if(!product || !Number.isSafeInteger(quantity) || quantity < 0){
+    showFlash('Enter a whole-number stock quantity of zero or more.', true);
+    renderTable();
+    return;
+  }
+  const size = input.dataset.stockSize;
+  if(input.dataset.stockField === 'real'){
+    product.sizes[size] = quantity;
+  }else{
+    product.reservedSizes[size] = quantity;
+  }
+  renderTable();
+  await saveRow(TABLE_PRODUCTS, product);
+  if(!document.getElementById('saveIndicator').classList.contains('error')){
+    showFlash(`${input.dataset.stockField === 'real' ? 'Real' : 'Reserved'} stock updated.`);
+  }
+}
+
+async function deleteProduct(id){
+  const product = products.find(item => Number(item.id) === id);
+  if(!product || !confirm(`Delete "${product.name}" and all its size data? This cannot be undone.`)) return;
+  products = products.filter(item => Number(item.id) !== id);
+  renderTable();
+  await deleteRow(TABLE_PRODUCTS, id);
+  if(!document.getElementById('saveIndicator').classList.contains('error')) showFlash('Product deleted.');
+}
+
+async function loadProducts(){
+  const loaded = await loadTable(TABLE_PRODUCTS);
+  const initialized = await storage.get(PRODUCTS_INITIALIZED_KEY, STORAGE_SHARED);
+  if(!loaded && initialized?.value !== 'true'){
+    products = DEFAULT_PRODUCTS.map(product => ({
+      ...product,
+      sizes:{...product.sizes},
+      prices:{...product.prices},
+      reservedSizes:Object.fromEntries(STOCK_SIZES.map(size => [size, 0])),
+    }));
+    for(const product of products) await saveRow(TABLE_PRODUCTS, product);
+    const result = await storage.set(PRODUCTS_INITIALIZED_KEY, 'true', STORAGE_SHARED);
+    if(!result) throw new Error('Could not save product initialization state.');
+  }else{
+    const savedProducts = loaded || [];
+    products = savedProducts.map(product => ({
+      ...product,
+      sizes:Object.fromEntries(STOCK_SIZES.map(size => [size, Math.max(0, Number(product.sizes?.[size]) || 0)])),
+      reservedSizes:Object.fromEntries(STOCK_SIZES.map(size => [size, Math.max(0, Number(product.reservedSizes?.[size]) || 0)])),
+      prices:product.prices || Object.fromEntries(STOCK_SIZES.map(size => [size, Number(product.price) || 0])),
+    }));
+    const migrated = products.filter(product => !savedProducts.find(item => Number(item.id) === Number(product.id))?.prices);
+    for(const product of migrated) await saveRow(TABLE_PRODUCTS, product);
+  }
+  nextProductId = products.reduce((highest, product) => Math.max(highest, Number(product.id) || 0), 0) + 1;
+}
+
+async function initializeStocks(){
+  if(sessionStorage.getItem('stockline-authenticated') !== 'true'){
+    window.location.href = 'dashboard.html';
+    return;
+  }
+  document.getElementById('whoami').textContent = 'admin';
+  try{
+    await loadProducts();
+    await loadOrderSalesForStock();
+    renderTable();
+  }catch(error){
+    console.error('Failed to load stocks:', error);
+    setSaveIndicator('error');
+    showFlash('Could not load saved stock data. Refresh to try again.', true);
+  }
+}
+
+document.getElementById('searchInput').addEventListener('input', renderTable);
+document.getElementById('addProductButton').addEventListener('click', () => openProductModal());
+document.getElementById('closeProductModal').addEventListener('click', () => document.getElementById('productModal').classList.remove('open'));
+document.getElementById('productModal').addEventListener('click', event => {
+  if(event.target === event.currentTarget) event.currentTarget.classList.remove('open');
+});
+document.getElementById('productForm').addEventListener('submit', saveProduct);
+document.getElementById('tableBody').addEventListener('click', event => {
+  const editButton = event.target.closest('[data-edit-product]');
+  if(editButton){
+    const product = products.find(item => Number(item.id) === Number(editButton.dataset.editProduct));
+    if(product) openProductModal(product);
+    return;
+  }
+  const deleteButton = event.target.closest('[data-delete-product]');
+  if(deleteButton) deleteProduct(Number(deleteButton.dataset.deleteProduct));
+});
+document.querySelectorAll('#realStockBody,#reservedStockBody').forEach(body => {
+  body.addEventListener('change', event => {
+    const input = event.target.closest('[data-stock-product]');
+    if(input) changeStockQuantity(input);
+  });
+});
+window.addEventListener('focus', async() => {
+  if(sessionStorage.getItem('stockline-authenticated') !== 'true') return;
+  try{
+    await loadProducts();
+    await loadOrderSalesForStock();
+    renderTable();
+  }catch(error){
+    console.error('Failed to refresh stocks:', error);
+    setSaveIndicator('error');
+    showFlash('Could not refresh stock data.', true);
+  }
+});
+
+initializeStocks();
+</script>
+</body>
+</html>
