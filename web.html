@@ -430,69 +430,6 @@
           </div>
         </div>
 
-        <!-- ===== Stocks view ===== -->
-        <div class="view" id="view-stocks">
-          <div class="page-header">
-            <div>
-              <h2>Stocks Overview</h2>
-                <p>Manage products and size-level stock.</p>
-            </div>
-            <button class="btn btn-primary" onclick="openModal('addModal')"><i class="fa-solid fa-plus"></i> Add Product</button>
-          </div>
-
-          <div class="card">
-            <div class="card-header">
-              <h3><i class="fa-solid fa-ruler" style="color:var(--denim);"></i> Stocks per Product (<span id="productCount">0</span> products)</h3>
-              <div class="input-wrap">
-                <i class="fa-solid fa-magnifying-glass"></i>
-                <input type="search" id="searchInput" placeholder="Search SKU or name" oninput="renderTable()">
-              </div>
-            </div>
-
-            <div class="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>SKU</th>
-                    <th>Product</th>
-                    <th style="text-align:center;">XS<br></th>
-                    <th style="text-align:center;">S<br></th>
-                    <th style="text-align:center;">M<br></th>
-                    <th style="text-align:center;">L<br></th>
-                    <th style="text-align:center;">XL<br></th>
-                    <th style="text-align:center;">2XL<br></th>
-                    <th style="text-align:center;">3XL<br></th>
-                    <th style="text-align:center;">Other<br></th>
-                    <th style="text-align:center;">Total</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody id="tableBody"></tbody>
-              </table>
-            </div>
-            <p class="legend">
-              Available stock per size = real stock − reserved stock − non-cancelled/non-returned order quantities across all dates.
-            </p>
-            <p class="legend">
-              <span class="badge badge-red">0–10</span> &nbsp;
-              <span class="badge badge-yellow">11–20</span> &nbsp;
-              <span class="badge badge-green">21+</span> available units
-            </p>
-          </div>
-
-          <div class="card" style="margin-top:20px;">
-            <div class="card-header"><h3><i class="fa-solid fa-boxes-stacked" style="color:var(--denim);"></i> Real Stock by Size</h3></div>
-            <div class="table-wrap stock-quantity-table-wrap"><table class="stock-quantity-table"><thead><tr><th>SKU</th><th>Product</th><th style="text-align:center;">XS</th><th style="text-align:center;">S</th><th style="text-align:center;">M</th><th style="text-align:center;">L</th><th style="text-align:center;">XL</th><th style="text-align:center;">2XL</th><th style="text-align:center;">3XL</th><th style="text-align:center;">Other</th><th style="text-align:center;">Total</th></tr></thead><tbody id="realStockBody"></tbody></table></div>
-            <p class="legend">Total physical stock on hand, including reserved units. Edit these quantities to update real stock.</p>
-          </div>
-
-          <div class="card" style="margin-top:20px;">
-            <div class="card-header"><h3><i class="fa-solid fa-box-open" style="color:var(--denim);"></i> Reserved Stock by Size</h3></div>
-            <div class="table-wrap stock-quantity-table-wrap"><table class="stock-quantity-table"><thead><tr><th>SKU</th><th>Product</th><th style="text-align:center;">XS</th><th style="text-align:center;">S</th><th style="text-align:center;">M</th><th style="text-align:center;">L</th><th style="text-align:center;">XL</th><th style="text-align:center;">2XL</th><th style="text-align:center;">3XL</th><th style="text-align:center;">Other</th><th style="text-align:center;">Total</th></tr></thead><tbody id="reservedStockBody"></tbody></table></div>
-            <p class="legend">Reserved quantities are subtracted from real stock, along with sold orders, to calculate available stock.</p>
-          </div>
-        </div>
-
         <!-- ===== Job Order Tracker view ===== -->
         <div class="view" id="view-joborders">
           <div class="page-header">
@@ -560,55 +497,6 @@
   </div>
 </div>
 
-<!-- Add Product Modal -->
-<div class="modal-overlay" id="addModal">
-  <div class="modal-box">
-    <span class="modal-close" onclick="closeModal('addModal')"><i class="fa-solid fa-xmark"></i></span>
-    <h3><i class="fa-solid fa-plus" style="color:var(--denim);"></i> Add Product</h3>
-    <form onsubmit="return handleAdd(event)">
-      <div class="form-row">
-        <div class="form-group"><label>SKU</label><input type="text" id="add_sku" required></div>
-        <div class="form-group"><label>Name</label><input type="text" id="add_name" required></div>
-      </div>
-      <div class="form-row">
-        <div class="form-group"><label>Prices per size (₱)</label><div class="size-grid" id="add_price_grid"></div></div>
-      </div>
-      <div class="form-group">
-        <label>Stock per size</label>
-        <div class="size-grid" id="add_size_grid"></div>
-      </div>
-      <div class="modal-actions">
-        <button type="submit" class="btn btn-primary btn-block"><i class="fa-solid fa-check"></i> Save Product</button>
-      </div>
-    </form>
-  </div>
-</div>
-
-<!-- Edit Product Modal -->
-<div class="modal-overlay" id="editModal">
-  <div class="modal-box">
-    <span class="modal-close" onclick="closeModal('editModal')"><i class="fa-solid fa-xmark"></i></span>
-    <h3><i class="fa-solid fa-pen" style="color:var(--denim);"></i> Edit Product</h3>
-    <form onsubmit="return handleEdit(event)">
-      <input type="hidden" id="edit_id">
-      <div class="form-row">
-        <div class="form-group"><label>SKU</label><input type="text" id="edit_sku" required></div>
-        <div class="form-group"><label>Name</label><input type="text" id="edit_name" required></div>
-      </div>
-      <div class="form-row">
-        <div class="form-group"><label>Prices per size (₱)</label><div class="size-grid" id="edit_price_grid"></div></div>
-      </div>
-      <div class="form-group">
-        <label>Stock per size</label>
-        <div class="size-grid" id="edit_size_grid"></div>
-      </div>
-      <div class="modal-actions">
-        <button type="submit" class="btn btn-primary btn-block"><i class="fa-solid fa-check"></i> Update Product</button>
-      </div>
-    </form>
-  </div>
-</div>
-
 <script src="database.js"></script>
 <script src="tiktok-campaigns.js"></script>
 <script>
@@ -671,13 +559,10 @@ async function handleLogin(e){
 
     document.getElementById('loginScreen').style.display = 'none';
     document.getElementById('dashboard').style.display = 'block';
-    buildSizeGrid('add_size_grid');
-    buildPriceGrid('add_price_grid');
-    renderTable();
     renderJobOrders();
     renderDashboard();
     const requestedView = new URLSearchParams(window.location.search).get('view');
-    showView(requestedView === 'stocks' ? 'stocks' : requestedView === 'joborders' ? 'joborders' : requestedView === 'operations' ? 'operations' : 'dashboard');
+    showView(requestedView === 'joborders' ? 'joborders' : requestedView === 'operations' ? 'operations' : 'dashboard');
 
     loginBtn.disabled = false;
     loginBtn.textContent = 'Sign in';
@@ -707,38 +592,6 @@ function handleLogout(){
   document.getElementById('loginScreen').style.display = 'flex';
   document.getElementById('loginForm').reset();
   document.getElementById('loginError').style.display = 'none';
-}
-
-function buildSizeGrid(containerId, values){
-  const grid = document.getElementById(containerId);
-  grid.innerHTML = '';
-  SIZES.forEach(size => {
-    const val = values ? (values[size] ?? 0) : 0;
-    grid.insertAdjacentHTML('beforeend', `
-      <div>
-        <label>${size}</label>
-        <input type="number" min="0" data-size="${size}" value="${val}">
-      </div>
-    `);
-  });
-}
-
-function buildPriceGrid(containerId, values){
-  const grid = document.getElementById(containerId);
-  grid.innerHTML = '';
-  SIZES.forEach(size => {
-    const val = values ? (values[size] ?? 0) : 0;
-    grid.insertAdjacentHTML('beforeend', `<div><label>${size}</label><input type="number" step="0.01" min="0" data-price-size="${size}" value="${val}"></div>`);
-  });
-}
-
-function readPriceGrid(containerId){
-  const grid = document.getElementById(containerId);
-  const out = {};
-  grid.querySelectorAll('input[data-price-size]').forEach(input => {
-    out[input.dataset.priceSize] = parseFloat(input.value) || 0;
-  });
-  return out;
 }
 
 function stockSkuKey(sku){
@@ -789,16 +642,9 @@ function availableStock(product, size){
   return startingStock - reserved - sold;
 }
 
-function stockLevelBadgeClass(quantity){
-  if(quantity <= 10) return 'badge-red';
-  if(quantity <= 20) return 'badge-yellow';
-  return 'badge-green';
-}
-
 window.addEventListener('focus', async() => {
   if(!products.length || document.getElementById('dashboard').style.display === 'none') return;
   await loadOrderSalesForStock();
-  renderTable();
   renderDashboard();
 });
 
@@ -831,156 +677,8 @@ function showFlash(msg, isError){
   setTimeout(() => { flash.style.display = 'none'; }, 2600);
 }
 
-function renderTable(){
-  const q = document.getElementById('searchInput').value.trim().toLowerCase();
-  const filtered = products
-    .filter(p => !q || p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q))
-    .sort((a,b) => a.name.localeCompare(b.name));
-
-  document.getElementById('productCount').textContent = filtered.length;
-  const body = document.getElementById('tableBody');
-
-  if(!filtered.length){
-    body.innerHTML = `<tr><td colspan="${SIZES.length + 4}" class="text-muted">No products found.</td></tr>`;
-    renderStockQuantityTables(filtered);
-    return;
-  }
-
-  body.innerHTML = filtered.map(p => {
-    const total = SIZES.reduce((sum, s) => sum + availableStock(p, s), 0);
-    const cells = SIZES.map(s => {
-      const qty = availableStock(p, s);
-      const cls = stockLevelBadgeClass(qty);
-      const storedPrice = Number(p.prices?.[s] ?? p.price ?? 0);
-      const price = Number.isFinite(storedPrice) ? storedPrice : 0;
-      return `<td style="text-align:center;"><span class="badge ${cls}">${qty}</span><br><span class="price-note">₱${price.toFixed(2)}</span></td>`;
-    }).join('');
-
-    return `
-      <tr>
-        <td class="sku">${p.sku}</td>
-        <td>
-          ${p.name}
-        </td>
-        ${cells}
-        <td style="text-align:center;"><span class="badge ${stockLevelBadgeClass(total)}">${total}</span></td>
-        <td>
-          <div class="row-actions">
-            <button class="btn btn-outline btn-sm" onclick="openEditModal(${p.id})"><i class="fa-solid fa-pen"></i></button>
-            <button class="btn btn-danger btn-sm" onclick="handleDelete(${p.id})"><i class="fa-solid fa-trash"></i></button>
-          </div>
-        </td>
-      </tr>
-    `;
-  }).join('');
-  renderStockQuantityTables(filtered);
-}
-
-function renderStockQuantityTables(filteredProducts = products){
-  const renderQuantityRows = (field, bodyId) => {
-    const body = document.getElementById(bodyId);
-    if(!filteredProducts.length){
-      body.innerHTML = `<tr><td colspan="${SIZES.length + 3}" class="text-muted">No products found.</td></tr>`;
-      return;
-    }
-    body.innerHTML = [...filteredProducts].sort((a, b) => a.name.localeCompare(b.name)).map(product => {
-      const values = SIZES.map(size => Math.max(0, Number((field === 'real' ? product.sizes : product.reservedSizes)?.[size]) || 0));
-      const total = values.reduce((sum, quantity) => sum + quantity, 0);
-      return `<tr>
-        <td class="sku">${escapeHtml(product.sku)}</td>
-        <td>${escapeHtml(product.name)}</td>
-        ${SIZES.map((size, index) => `<td style="text-align:center;"><input type="number" min="0" step="1" value="${values[index]}" data-stock-product="${product.id}" data-stock-field="${field}" data-stock-size="${size}" aria-label="${field === 'real' ? 'Real' : 'Reserved'} stock for ${escapeHtml(product.sku)} size ${size}"></td>`).join('')}
-        <td style="text-align:center;font-weight:800;">${total}</td>
-      </tr>`;
-    }).join('');
-  };
-  renderQuantityRows('real', 'realStockBody');
-  renderQuantityRows('reserved', 'reservedStockBody');
-}
-
-async function handleStockQuantityChange(input){
-  const product = products.find(item => Number(item.id) === Number(input.dataset.stockProduct));
-  const quantity = input.valueAsNumber;
-  if(!product || !Number.isSafeInteger(quantity) || quantity < 0){
-    showFlash('Enter a whole-number stock quantity of zero or more.', true);
-    renderTable();
-    return;
-  }
-  const size = input.dataset.stockSize;
-  if(input.dataset.stockField === 'real'){
-    product.sizes[size] = quantity;
-  }else{
-    if(!product.reservedSizes) product.reservedSizes = Object.fromEntries(SIZES.map(itemSize => [itemSize, 0]));
-    product.reservedSizes[size] = quantity;
-  }
-  renderTable();
-  await saveRow(TABLE_PRODUCTS, product);
-  showFlash(`${input.dataset.stockField === 'real' ? 'Real' : 'Reserved'} stock updated.`);
-}
-
-document.getElementById('view-stocks').addEventListener('change', event => {
-  const input = event.target.closest('[data-stock-product]');
-  if(input) handleStockQuantityChange(input);
-});
-
 function openModal(id){ document.getElementById(id).classList.add('open'); }
 function closeModal(id){ document.getElementById(id).classList.remove('open'); }
-
-async function handleAdd(e){
-  e.preventDefault();
-  const sku = document.getElementById('add_sku').value.trim();
-  const name = document.getElementById('add_name').value.trim();
-  const sizes = readSizeGrid('add_size_grid');
-  const prices = readPriceGrid('add_price_grid');
-
-  const newProduct = { id: nextId++, sku, name, prices, sizes, reservedSizes:Object.fromEntries(SIZES.map(size => [size, 0])) };
-  products.push(newProduct);
-  e.target.reset();
-  buildSizeGrid('add_size_grid');
-  buildPriceGrid('add_price_grid');
-  closeModal('addModal');
-  renderTable();
-  showFlash('Product added.');
-  await saveRow(TABLE_PRODUCTS, newProduct);
-  return false;
-}
-
-function openEditModal(id){
-  const p = products.find(x => x.id === id);
-  if(!p) return;
-  document.getElementById('edit_id').value = p.id;
-  document.getElementById('edit_sku').value = p.sku;
-  document.getElementById('edit_name').value = p.name;
-  buildSizeGrid('edit_size_grid', p.sizes);
-  buildPriceGrid('edit_price_grid', p.prices || Object.fromEntries(SIZES.map(size => [size, p.price || 0])));
-  openModal('editModal');
-}
-
-async function handleEdit(e){
-  e.preventDefault();
-  const id = parseInt(document.getElementById('edit_id').value, 10);
-  const p = products.find(x => x.id === id);
-  if(!p) return false;
-  p.sku = document.getElementById('edit_sku').value.trim();
-  p.name = document.getElementById('edit_name').value.trim();
-  p.sizes = readSizeGrid('edit_size_grid');
-  p.prices = readPriceGrid('edit_price_grid');
-  closeModal('editModal');
-  renderTable();
-  showFlash('Product updated.');
-  await saveRow(TABLE_PRODUCTS, p);
-  return false;
-}
-
-async function handleDelete(id){
-  const p = products.find(x => x.id === id);
-  if(!p) return;
-  if(!confirm(`Delete "${p.name}" and all its size data? This cannot be undone.`)) return;
-  products = products.filter(x => x.id !== id);
-  renderTable();
-  showFlash('Product deleted.');
-  await deleteRow(TABLE_PRODUCTS, id);
-}
 
 function escapeHtml(value){
   return String(value).replace(/[&<>'"]/g, character => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[character]));
