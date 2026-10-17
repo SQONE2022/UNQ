@@ -96,7 +96,7 @@
 </style>
 </head>
 <body>
-<div class="app-shell">
+<div class="app-shell" id="calendarPage">
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-brand"><div class="login-mark"><i class="fa-solid fa-box"></i></div><span>Admin Dashboard</span></div>
     <p class="nav-label">Menu</p>
@@ -277,6 +277,7 @@ function openEventPopover(key, day){
   popover.querySelector('.event-popover-close').focus({preventScroll:true});
 }
 
+const calendarPage = document.getElementById('calendarPage');
 const calendarGrid = document.getElementById('calendarGrid');
 calendarGrid.addEventListener('pointerdown', event => {
   const day = event.target.closest('[data-date]');
@@ -303,14 +304,14 @@ calendarGrid.addEventListener('click', event => {
   openEventPopover(day.dataset.date, day);
 });
 
-document.addEventListener('pointerdown', event => {
+calendarPage.addEventListener('pointerdown', event => {
   const popover = document.getElementById('eventPopover');
   if(!popover.hidden && !popover.contains(event.target) && !event.target.closest('[data-date]')){
     closeEventPopover();
   }
 });
 
-document.addEventListener('keydown', event => {
+calendarPage.addEventListener('keydown', event => {
   if(event.key === 'Escape') closeEventPopover();
 });
 
